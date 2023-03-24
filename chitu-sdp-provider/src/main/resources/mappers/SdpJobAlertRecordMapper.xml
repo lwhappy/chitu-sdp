@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpJobAlertRecordMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpJobAlertRecord">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="job_id" jdbcType="BIGINT" property="jobId" />
+        <result column="rule_id" jdbcType="BIGINT" property="ruleId" />
+        <result column="alert_time" jdbcType="TIMESTAMP" property="alertTime" />
+        <result column="alert_content" jdbcType="VARCHAR" property="alertContent" />
+        <result column="alert_num" jdbcType="INTEGER" property="alertNum" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+
+    <resultMap id="BaseResultDetailMap" type="com.chitu.bigdata.sdp.api.vo.SdpJobAlertRecordVo">
+        <result column="id" jdbcType="BIGINT" property="id" />
+        <result column="job_id" jdbcType="BIGINT" property="jobId" />
+        <result column="rule_id" jdbcType="BIGINT" property="ruleId" />
+        <result column="alert_time" jdbcType="TIMESTAMP" property="alertTime" />
+        <result column="alert_content" jdbcType="VARCHAR" property="alertContent" />
+        <result column="rule_type" jdbcType="VARCHAR" property="ruleGenerateType" />
+        <result column="rule_name" jdbcType="VARCHAR" property="ruleName" />
+        <result column="rule_desc" jdbcType="VARCHAR" property="ruleDesc" />
+        <result column="index_name" jdbcType="VARCHAR" property="indexName" />
+        <result column="rule_content" jdbcType="VARCHAR" property="ruleContent" />
+        <result column="effective_time" jdbcType="VARCHAR" property="effectiveTime" />
+        <result column="alert_rate" jdbcType="INTEGER" property="alertRate" />
+        <result column="notifi_type" jdbcType="VARCHAR" property="notifiType" />
+        <result column="notify_users" jdbcType="VARCHAR" property="notifyUsers" />
+        <result column="effective_state" jdbcType="VARCHAR" property="effectiveState" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+
+
+    <sql id="BaseTable">
+        sdp_job_alert_record
+    </sql>
+    <select id="queryList" resultMap="BaseResultDetailMap">
+        select
+        t1.id,
+        t1.alert_time,
+        t1.alert_content,
+        t1.creation_date,
+        t1.updation_date,
+        t1.rule_id,
+        t2.rule_name,
+        t2.rule_desc,
+        t2.index_name,
+        t2.rule_content,
+        t2.notifi_type,
+        t2.notify_users,
+        t2.effective_state
+        from
+        (
+        select * from sdp_job_alert_record
+        <where>
+            enabled_flag = 1
+            <if test="jobId != null">
+                and job_id = #{jobId}
+            </if>
+        </where>
+        ) t1
+        join sdp_job_alert_rule t2
+        on t1.rule_id = t2.id
+        <if test="orderByClauses != null">
+            <trim prefix=" ORDER  BY " suffix="  " suffixOverrides=",">
+                <foreach collection="orderByClauses" item="orderByObj">
+                    <if test="orderByObj.field != null and orderByObj.field != ''">
+                        <if test="orderByObj.orderByMode == 0">
+                            #{orderByObj.field} ASC ,
+                        </if>
+                        <if test="orderByObj.orderByMode != 0">
+                            #{orderByObj.field} DESC ,
+                        </if>
+                    </if>
+                </foreach>
+            </trim>
+        </if>
+    </select>
+</mapper>

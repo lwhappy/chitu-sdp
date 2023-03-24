@@ -1,0 +1,5 @@
+flink:
+  sqlJar: chitu-sdp-flink-sqlclient-1.14-1.0.0-SNAPSHOT.jar
+  flinkHome: /opt/apache/flink-1.14.3
+  cancelTimeout: 30
+  triggerSavepointTimeout: 30

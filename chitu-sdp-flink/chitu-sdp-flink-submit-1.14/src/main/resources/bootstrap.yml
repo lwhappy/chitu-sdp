@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: sdp-submit-114
+
+server:
+  port: 12282
+
+spring.cloud:
+  nacos:
+    discovery:
+      server-addr: nacos-standalone:8848
+      # 当没有nacos环境时不启用，使用本地配置文件
+      enabled: false
+    config:
+      server-addr: nacos-standalone:8848
+      file-extension: yml
+      prefix: ${spring.application.name}
+      # 当没有nacos环境时不启用，使用本地配置文件
+      enabled: true

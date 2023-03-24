@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpProJobTableDetailMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpProJobTableDetail">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="project_name" jdbcType="VARCHAR" property="projectName" />
+        <result column="project_level" jdbcType="VARCHAR" property="projectLevel" />
+        <result column="product_line_code" jdbcType="VARCHAR" property="productLineCode" />
+        <result column="product_line_name" jdbcType="VARCHAR" property="productLineName" />
+        <result column="file_id" jdbcType="BIGINT" property="fileId" />
+        <result column="file_name" jdbcType="VARCHAR" property="fileName" />
+        <result column="job_id" jdbcType="BIGINT" property="jobId" />
+        <result column="job_type" jdbcType="VARCHAR" property="jobType" />
+        <result column="job_name" jdbcType="VARCHAR" property="jobName" />
+        <result column="job_owner_number" jdbcType="VARCHAR" property="jobOwnerNumber" />
+        <result column="job_owner" jdbcType="VARCHAR" property="jobOwner" />
+        <result column="job_jm_memory" jdbcType="VARCHAR" property="jobJmMemory" />
+        <result column="job_tm_memory" jdbcType="VARCHAR" property="jobTmMemory" />
+        <result column="job_parallelism" jdbcType="VARCHAR" property="jobParallelism" />
+        <result column="job_engine_name" jdbcType="VARCHAR" property="jobEngineName" />
+        <result column="job_engine_version" jdbcType="VARCHAR" property="jobEngineVersion" />
+        <result column="job_jar_name" jdbcType="VARCHAR" property="jobJarName" />
+        <result column="job_jar_version" jdbcType="VARCHAR" property="jobJarVersion" />
+        <result column="job_created_by" jdbcType="VARCHAR" property="jobCreatedBy" />
+        <result column="job_updated_by" jdbcType="VARCHAR" property="jobUpdatedBy" />
+        <result column="job_creation_date" jdbcType="TIMESTAMP" property="jobCreationDate" />
+        <result column="job_updation_date" jdbcType="TIMESTAMP" property="jobUpdationDate" />
+        <result column="data_source_type" jdbcType="VARCHAR" property="dataSourceType" />
+        <result column="data_source_url" jdbcType="VARCHAR" property="dataSourceUrl" />
+        <result column="database_name" jdbcType="VARCHAR" property="databaseName" />
+        <result column="flink_table_name" jdbcType="VARCHAR" property="flinkTableName" />
+        <result column="meta_table_name" jdbcType="VARCHAR" property="metaTableName" />
+        <result column="meta_table_type" jdbcType="VARCHAR" property="metaTableType" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+
+    <sql id="BaseTable">
+        sdp_pro_job_table_detail
+    </sql>
+
+    <select id="getJobInfo" resultMap="BaseResultMap">
+        select
+        a.`id`,
+        a.`project_id`,
+        a.`project_name`,
+        concat('P',a.project_level) project_level,
+        a.`product_line_code`,
+        a.`product_line_name`,
+        a.`file_id`,
+        a.`file_name`,
+        a.`job_id`,
+        a.`job_type`,
+        a.`job_name`,
+        a.job_owner_number,
+        a.job_owner,
+        concat(a.job_jm_memory,'G') job_jm_memory,
+        concat(a.job_tm_memory,'G') job_tm_memory,
+        a.`job_parallelism`,
+        a.job_engine_name,
+        a.job_engine_version,
+        a.job_jar_name,
+        a.job_jar_version,
+        a.job_created_by,
+        a.job_updated_by,
+        a.`job_creation_date`,
+        a.`job_updation_date`,
+        a.`data_source_type`,
+        a.`data_source_url`,
+        a.`database_name`,
+        a.`flink_table_name`,
+        a.`meta_table_name`,
+        a.`meta_table_type`,
+        a.`enabled_flag`,
+        a.`creation_date`,
+        a.`updation_date`
+        from sdp_pro_job_table_detail a
+        <where>
+            a.enabled_flag =1
+            <if test="vo.jobId != null">
+                and a.job_id = #{vo.jobId}
+            </if>
+            <if test="vo.startTime != null and vo.startTime != ''">
+                and <![CDATA[a.creation_date >= STR_TO_DATE(#{vo.startTime},"%Y-%m-%d")]]>
+            </if>
+            <if test="vo.endTime != null and vo.endTime != ''">
+                and <![CDATA[a.creation_date < STR_TO_DATE(#{vo.endTime},"%Y-%m-%d")]]>
+            </if>
+        </where>
+    </select>
+</mapper>

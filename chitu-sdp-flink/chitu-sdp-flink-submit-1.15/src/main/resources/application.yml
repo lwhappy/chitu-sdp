@@ -1,0 +1,8 @@
+flink:
+  sqlJar: chitu-sdp-flink-sqlclient-1.15-1.0.0-SNAPSHOT.jar
+  libConfig:
+    es6: /sdp/flink/flink-1.15.2/connector/es6
+    es7: /sdp/flink/flink-1.15.2/connector/es7
+  flinkHome: /opt/apache/flink-1.15.2
+  cancelTimeout: 30
+  triggerSavepointTimeout: 30

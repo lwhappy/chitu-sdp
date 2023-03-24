@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpLineageTableRelationMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpLineageTableRelation">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="file_id" jdbcType="BIGINT" property="fileId" />
+        <result column="job_id" jdbcType="BIGINT" property="jobId" />
+        <result column="job_name" jdbcType="VARCHAR" property="jobName" />
+        <result column="source_data_source_type" jdbcType="VARCHAR" property="sourceDataSourceType" />
+        <result column="sink_data_source_type" jdbcType="VARCHAR" property="sinkDataSourceType" />
+        <result column="source_data_source_url" jdbcType="VARCHAR" property="sourceDataSourceUrl" />
+        <result column="sink_data_source_url" jdbcType="VARCHAR" property="sinkDataSourceUrl" />
+        <result column="source_database_name" jdbcType="VARCHAR" property="sourceDatabaseName" />
+        <result column="sink_database_name" jdbcType="VARCHAR" property="sinkDatabaseName" />
+        <result column="source_table_name" jdbcType="VARCHAR" property="sourceTableName" />
+        <result column="sink_table_name" jdbcType="VARCHAR" property="sinkTableName" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+
+    <sql id="BaseTable">
+        sdp_lineage_table_relation
+    </sql>
+
+    <select id="queryByJobId" parameterType="com.chitu.bigdata.sdp.api.bo.SdpProJobTableDetailBO" resultMap="BaseResultMap">
+        select a.`id`,a.`file_id`,a.`job_id`,a.`job_name`,a.`source_data_source_type`,a.`sink_data_source_type`,a.`source_data_source_url`,
+        a.`sink_data_source_url`,a.`source_database_name`,a.`sink_database_name`,a.`source_table_name`,a.`sink_table_name`,a.`enabled_flag`,
+        b.`user_name` created_by,c.`user_name` updated_by,a.`creation_date`,a.`updation_date`
+        from sdp_lineage_table_relation a
+        left join sdp_user b on b.id = a.created_by
+        left join sdp_user c on c.id = a.updated_by
+        where a.enabled_flag = 1
+        and a.job_id = #{jobId}
+    </select>
+
+    <select id="queryRelations" resultMap="BaseResultMap">
+        select a.`id`,a.`file_id`,a.`job_id`,a.`job_name`,a.`source_data_source_type`,a.`sink_data_source_type`,a.`source_data_source_url`,
+        a.`sink_data_source_url`,a.`source_database_name`,a.`sink_database_name`,a.`source_table_name`,a.`sink_table_name`,a.`enabled_flag`,
+        a.created_by,a.updated_by,a.`creation_date`,a.`updation_date`
+        from sdp_lineage_table_relation a
+        <where>
+            a.enabled_flag = 1
+            <if test="vo.jobId != null">
+                and a.job_id = #{vo.jobId}
+            </if>
+        </where>
+    </select>
+
+</mapper>

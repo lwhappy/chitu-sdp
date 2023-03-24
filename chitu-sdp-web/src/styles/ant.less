@@ -1,0 +1,59 @@
+@import '~ant-design-vue/dist/antd.less'; // 引入官方提供的 less 样式入口文件
+@import './sdp-theme.less'; // 用于覆盖上面定义的变量
+
+// 覆盖a-modal样式，解决title长度溢出问题
+.ant-modal-header {
+  height: auto!important;
+  .ant-modal-title {
+    padding: 11.5px 44px 11.5px 16px !important;
+    word-wrap: break-word !important;
+    word-break: normal !important;
+    line-height: normal!important;
+  }
+}
+// 设置button字体
+.ant-btn {
+  font-size: 12px!important;
+}
+.ant-btn-sm {
+  height: 28px;
+  padding: 0 17px;
+}
+//a-modal样式调整
+.ant-modal-header {
+  padding: 0;
+}
+.ant-modal-title {
+  font-weight: 700;
+}
+.ant-modal-close-x {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+}
+.table-data {
+  .ant-dropdown-menu-item-selected {
+    // color: #F95353;
+    background: #fff!important;
+  }
+  .ant-table-filter-dropdown-btns {
+    font-size: 12px;
+  }
+  .ant-dropdown {
+    .ant-dropdown-menu-item {
+      font-size: 12px;
+    }
+  }
+  .ant-dropdown-open {
+  color: #0066FF!important;
+  }
+}
+.ant-popover-inner{
+   font-size: 12px!important;
+   max-height: 150px!important;
+   max-width: 400px!important;
+   overflow-y:auto!important;
+}
+.ant-message {
+  z-index: 99999!important;
+}

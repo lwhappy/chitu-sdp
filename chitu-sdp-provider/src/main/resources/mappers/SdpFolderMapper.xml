@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpFolderMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpFolder">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="folder_name" jdbcType="VARCHAR" property="folderName" />
+        <result column="parent_id" jdbcType="BIGINT" property="parentId" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="business_flag" jdbcType="VARCHAR" property="businessFlag" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+    <resultMap id="BaseResultMap1" type="com.chitu.bigdata.sdp.api.vo.FolderVo">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="folder_name" jdbcType="VARCHAR" property="folderName" />
+        <result column="parent_id" jdbcType="BIGINT" property="parentId" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="folder_id" jdbcType="BIGINT" property="folderId" />
+        <result column="type" jdbcType="VARCHAR" property="type" />
+        <result column="file_type" jdbcType="VARCHAR" property="fileType" />
+        <result column="is_on_line" jdbcType="VARCHAR" property="isOnLine" />
+        <result column="priority" jdbcType="TINYINT" property="priority" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_folder
+    </sql>
+    <select id="queryFolder" parameterType="com.chitu.bigdata.sdp.api.vo.FolderVo" resultMap="BaseResultMap1">
+        select sp.priority,sf.*
+        from sdp_folder sf
+        inner join sdp_project sp on sp.id = sf.project_id and sp.enabled_flag = 1
+        <where>
+            sf.enabled_flag = 1
+            <if test="folderName != null and folderName != ''">
+                and sf.folder_name like concat('%',#{folderName},'%')
+            </if>
+            <if test="projectId != null">
+                and sf.project_id = #{projectId}
+            </if>
+            <if test="parentId != null">
+                and sf.parent_id = #{parentId}
+            </if>
+            <if test="id != null">
+                and sf.id = #{id}
+            </if>
+        </where>
+        order by sf.folder_name
+    </select>
+
+    <select id="getFolder" parameterType="com.chitu.bigdata.sdp.api.model.SdpFolder" resultMap="BaseResultMap">
+        select * from sdp_folder
+        <where>
+            enabled_flag = 1
+            <if test="folderName != null and folderName != ''">
+                and folder_name = #{folderName}
+            </if>
+            <if test="businessFlag != null and businessFlag != ''">
+                and business_flag = #{businessFlag}
+            </if>
+            <if test="projectId != null">
+                and project_id = #{projectId}
+            </if>
+            <if test="parentId != null">
+                and parent_id = #{parentId}
+            </if>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+        </where>
+    </select>
+
+    <select id="searchFolderAndFile" parameterType="com.chitu.bigdata.sdp.api.bo.SdpFolderBO" resultMap="BaseResultMap1">
+        select id,folder_name name,'folder' type,parent_id,'' folder_id,'' file_type,'' is_on_line
+        from sdp_folder
+        where enabled_flag = 1
+        and project_id = #{projectId}
+        and folder_name like concat('%',#{folderName},'%')
+        union all
+        select sf.id,sf.file_name name,'file' type,'' parent_id,sf.folder_id,sf.file_type,
+        case when sj.id is null then 0 else 1 end as is_on_line
+        from sdp_file sf
+        left join sdp_job sj on sj.file_id = sf.id and sj.enabled_flag = 1
+        where sf.enabled_flag = 1
+        and sf.project_id = #{projectId}
+        and sf.file_name like concat('%',#{folderName},'%')
+    </select>
+    <select id="searchFolder" parameterType="com.chitu.bigdata.sdp.api.bo.SdpFolderBO" resultMap="BaseResultMap1">
+        select id,folder_name name
+        from sdp_folder
+        where enabled_flag = 1
+        and project_id = #{projectId}
+        and folder_name like concat('%',#{folderName},'%')
+    </select>
+    <select id="getFolderByName" resultMap="BaseResultMap">
+        select * from sdp_folder  where
+        project_id = #{projectId}
+        and folder_name = #{folderName}
+        and parent_id = #{parentId}
+        and enabled_flag = 1
+    </select>
+</mapper>

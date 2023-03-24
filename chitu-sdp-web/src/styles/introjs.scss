@@ -1,0 +1,48 @@
+.introjs-tooltipReferenceLayer {
+  z-index: 9000 !important;
+}
+
+.introjs-helperLayer {
+  z-index: 8998 !important;
+}
+
+.introjs-overlay {
+  z-index: 8999 !important;
+}
+div.introjs-showElement {
+  z-index: 8997 !important;
+}
+.introjs-tooltipReferenceLayer {
+  z-index: 9000 !important;
+
+  .introjs-tooltiptext {
+    font-size: 16px;
+  }
+
+  .introjs-button {
+    font-size: 13px;
+    padding: 5px 6px;
+    min-width: 80px;
+    text-align: center;
+
+    &.introjs-nextbutton,
+    &.introjs-donebutton {
+      background-color: #006fff;
+      color: white;
+      border: none;
+      text-align: center;
+      border-radius: 4px;
+      text-shadow: none;
+
+      &:active {
+        opacity: 0.5;
+      }
+
+      &:focus {
+        border: none;
+        box-shadow: none;
+        color: white;
+      }
+    }
+  }
+}

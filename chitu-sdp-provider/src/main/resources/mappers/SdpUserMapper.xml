@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpUserMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpUser">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="user_name" jdbcType="VARCHAR" property="userName" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="employee_number" jdbcType="VARCHAR" property="employeeNumber" />
+        <result column="employee_id" jdbcType="VARCHAR" property="employeeId" />
+        <result column="password" jdbcType="VARCHAR" property="password" />
+        <result column="private_mobile" jdbcType="VARCHAR" property="privateMobile" />
+        <result column="email" jdbcType="VARCHAR" property="email" />
+        <result column="is_admin" jdbcType="TINYINT" property="isAdmin" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="last_login" jdbcType="TIMESTAMP" property="lastLogin" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_user
+    </sql>
+
+    <resultMap id="ResultMap" type="com.chitu.bigdata.sdp.api.domain.ProjectUser">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="user_name" jdbcType="VARCHAR" property="userName" />
+        <result column="employee_number" jdbcType="VARCHAR" property="employeeNumber" />
+        <result column="is_admin" jdbcType="TINYINT" property="isAdmin" />
+        <result column="is_leader" jdbcType="TINYINT" property="isLeader" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+        <result column="project_name" jdbcType="VARCHAR" property="projectName" />
+        <result column="project_code" jdbcType="VARCHAR" property="projectCode" />
+    </resultMap>
+
+    <select id="queryUser" resultMap="BaseResultMap">
+        select su.* from sdp_user su
+        where su.enabled_flag = 1
+          and su.employee_number = #{employeeNumber}
+    </select>
+
+    <select id="searchPage" resultMap="BaseResultMap">
+        SELECT
+        a.id,
+        a.user_name,
+        a.employee_number,
+        a.private_mobile,
+        a.email,
+        a.password,
+        a.is_admin,
+        a.department,
+        a.duty,
+        a.creation_date,
+        a.updation_date,
+        a.created_by,
+        b.user_name updated_by
+        from sdp_user a left join sdp_user b on a.updated_by = b.id
+        <where>
+            a.enabled_flag = 1
+            <if test="criteria != null">
+                <if test="criteria.vo.employeeNumber != null and criteria.vo.employeeNumber != ''">
+                    and a.employee_number = #{criteria.vo.employeeNumber, jdbcType=VARCHAR}
+                </if>
+                <if test="criteria.vo.userName != null and criteria.vo.userName != ''">
+                    and a.user_name like concat('%', #{criteria.vo.userName, jdbcType=VARCHAR},'%')
+                </if>
+            </if>
+        </where>
+        <if test="criteria != null and criteria.orderByClauses != null ">
+            <if test="criteria != null and criteria.orderByClauses != null ">
+                <trim prefix=" ORDER  BY " suffix="  " suffixOverrides=",">
+                    <foreach collection="criteria.orderByClauses" item="orderByObj">
+                        <if test="orderByObj.field != null and orderByObj.field != ''">
+                            <if test="orderByObj.orderByMode == 0">
+                                #{orderByObj.field} ASC ,
+                            </if>
+                            <if test="orderByObj.orderByMode != 0">
+                                #{orderByObj.field} DESC ,
+                            </if>
+                        </if>
+                    </foreach>
+                </trim>
+            </if>
+        </if>
+    </select>
+
+    <select id="getProjectUser" resultMap="ResultMap">
+        SELECT
+        su.id,
+        su.user_name,
+        su.employee_number,
+        su.is_admin,
+        spu.project_id,
+        spu.updation_date as updation_date,
+        spu.is_leader
+        from sdp_project_user spu
+        INNER JOIN sdp_user su on spu.user_id = su.id and su.enabled_flag = 1
+        where
+        spu.enabled_flag = 1
+        <if test="projectId != null ">
+            AND spu.project_id = #{projectId}
+        </if>
+        order by spu.updation_date desc
+    </select>
+
+    <select id="getUserInfos" parameterType="com.chitu.bigdata.sdp.api.model.SdpProject" resultMap="ResultMap">
+        SELECT
+        su.id,
+        su.user_name,
+        su.employee_number,
+        su.is_admin,
+        spu.project_id,
+        spu.updation_date as updation_date,
+        spu.is_leader
+        from sdp_project_user spu
+        INNER JOIN sdp_user su on spu.user_id = su.id and su.enabled_flag = 1
+        where
+        spu.enabled_flag = 1
+        <if test="id != null ">
+            AND spu.project_id = #{id}
+            AND spu.is_leader in (0,1)
+        </if>
+        order by spu.updation_date desc
+
+    </select>
+
+    <select id="getProUserAndAdmin" parameterType="com.chitu.bigdata.sdp.api.model.SdpProject" resultMap="ResultMap">
+        select
+        distinct
+        su.id,
+        su.user_name,
+        su.employee_number,
+        su.is_admin,
+        #{id} as project_id,
+        su.updation_date as updation_date,
+        max(spu.is_leader) as is_leader
+        from  sdp_user su
+        INNER JOIN sdp_project_user spu on spu.user_id = su.id and spu.enabled_flag = 1
+        where
+        (spu.enabled_flag = 1
+        <if test="id != null ">
+            AND spu.project_id = #{id}
+            AND spu.is_leader in (0,1)
+        </if>
+        ) or (su.enabled_flag = 1 and su.is_admin =1 )
+        group by  su.id,
+        su.user_name,
+        su.employee_number,
+        su.is_admin,
+        updation_date
+        order by su.updation_date desc
+    </select>
+
+    <!-- getUser4Project用来获取前端进行项目权限控制返回的user信息使用
+      1，当用户没有项目时，需要返回该用户的user表的信息
+      2，需要返回is_leader字段进行管控项目空间的权限-->
+    <select id="getUser4Project" resultMap="ResultMap">
+        SELECT
+        t.id,
+        t.user_name,
+        t.employee_number,
+        t.is_admin,
+        t.project_id,
+        t.is_leader
+        from (
+        SELECT
+        su.id,
+        su.user_name,
+        su.employee_number,
+        su.is_admin,
+        spu.project_id,
+        spu.is_leader
+        from sdp_project_user spu
+        inner JOIN sdp_user su on spu.user_id = su.id and su.enabled_flag = 1
+        where
+        spu.enabled_flag = 1
+        <if test="projectId != null ">
+            AND spu.project_id = #{projectId}
+            and spu.is_leader in (0,1)
+        </if>
+        <if test="userId != null ">
+            and spu.user_id = #{userId}
+        </if>
+        union select
+        su1.id,
+        su1.user_name,
+        su1.employee_number,
+        su1.is_admin,
+        null as project_id,
+        null as is_leader
+        from sdp_user su1
+        where su1.enabled_flag = 1
+        <if test="userId != null ">
+            and su1.id = #{userId}
+        </if>
+        ) t
+        order by t.is_leader desc limit 1
+    </select>
+
+    <select id="getMangerUser4Project" resultMap="ResultMap">
+        SELECT
+        su.id,
+        su.user_name,
+        su.employee_number,
+        su.is_admin,
+        spu.project_id,
+        spu.is_leader
+        from sdp_project_user spu
+        inner JOIN sdp_user su on spu.user_id = su.id and su.enabled_flag = 1
+        where
+        spu.enabled_flag = 1
+        <if test="projectId != null ">
+            AND spu.project_id = #{projectId}
+        </if>
+        <if test="userId != null ">
+            and spu.user_id = #{userId}
+        </if>
+
+    </select>
+
+    <select id="getEngineUser" parameterType="com.chitu.bigdata.sdp.api.domain.EngineUserInfo" resultMap="BaseResultMap">
+        SELECT
+        su.id,
+        su.user_name,
+        su.employee_number,
+        seu.updation_date as updation_date,
+        su.is_admin
+        from sdp_engine_user seu
+        LEFT JOIN sdp_user su on seu.user_id = su.id and su.enabled_flag = 1
+        where
+        seu.enabled_flag = 1
+        <if test="engineId != null ">
+            AND seu.engine_id = #{engineId}
+        </if>
+        <if test="nameOrNumber != null and nameOrNumber != ''">
+            AND   (  su.user_name  like CONCAT('%',#{nameOrNumber, jdbcType=VARCHAR},'%')
+            OR cast(su.employee_number as char) like CONCAT('%',#{nameOrNumber, jdbcType=VARCHAR},'%')  )
+        </if>
+        order by seu.updation_date desc
+    </select>
+
+
+    <select id="getCondition" resultMap="BaseResultMap">
+        SELECT
+        id,
+        user_name,
+        user_name as name,
+        employee_number,
+        is_admin
+        from sdp_user
+        <where>
+            enabled_flag = 1
+            <if test="nameOrNumber != null and nameOrNumber != ''">
+                and (  user_name  like CONCAT('%',#{nameOrNumber, jdbcType=VARCHAR},'%')
+                OR cast(employee_number as char) like CONCAT('%',#{nameOrNumber, jdbcType=VARCHAR},'%')  )
+            </if>
+        </where>
+
+    </select>
+
+    <select id="getProjectHistory" resultMap="ResultMap">
+        SELECT
+        su.id,
+        su.user_name,
+        su.employee_number,
+        su.is_admin,
+        su.project_id,
+        sp.project_name,
+        sp.project_code
+        from sdp_user su
+        inner join sdp_project sp on su.project_id = sp.id and sp.enabled_flag = 1
+        <where>
+            su.enabled_flag = 1
+            and su.project_id is not null
+            <if test="userId != null ">
+                and su.id = #{userId}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryProjects4User" resultMap="ResultMap">
+        SELECT
+        spu.user_id as id,
+        spu.project_id,
+        sp.project_name,
+        sp.project_code
+        from sdp_project_user spu
+        inner join sdp_project sp on sp.id = spu.project_id and sp.enabled_flag = 1
+        <where>
+            spu.enabled_flag = 1
+            <if test="userId != null ">
+                and spu.user_id = #{userId}
+            </if>
+        </where>
+        limit 1
+    </select>
+
+    <select id="selectIsExist" resultMap="BaseResultMap">
+        SELECT
+        id,
+        user_name,
+        employee_number,
+        is_admin
+        from sdp_user
+        <where>
+            enabled_flag = 1
+            <if test="userName != null and userName != ''">
+                and user_name = #{userName, jdbcType=VARCHAR}
+            </if>
+            <if test="employeeNumber != null and employeeNumber !=''">
+                and employee_number = #{employeeNumber, jdbcType=VARCHAR}
+            </if>
+            <if test="isAdmin != null ">
+                and is_admin = #{isAdmin, jdbcType=TINYINT}
+            </if>
+            <if test="id != null">
+                and id = #{id, jdbcType=BIGINT}
+            </if>
+        </where>
+    </select>
+    <!-- 由于user表是以employee_number为唯一键需要限制搜索只能是employee_number   -->
+    <select id="selectExist" resultMap="BaseResultMap">
+        SELECT
+        id,
+        user_name,
+        employee_number,
+        is_admin,
+        enabled_flag
+        from sdp_user
+        <where>
+            <!--               <if test="userName != null and userName != ''">-->
+            <!--                   and user_name = #{userName, jdbcType=VARCHAR}-->
+            <!--               </if>-->
+            <if test="employeeNumber != null and employeeNumber !=''">
+                and employee_number = #{employeeNumber, jdbcType=VARCHAR}
+            </if>
+        </where>
+    </select>
+
+
+
+    <update id="upsertAdmin" >
+        INSERT INTO sdp_user (
+            user_name,
+            employee_number,
+            enabled_flag,
+            is_admin,
+            creation_date
+        ) VALUES (
+                     #{userName,jdbcType=VARCHAR},
+                     #{employeeNumber,jdbcType=VARCHAR},
+                     1,
+                     #{isAdmin,jdbcType=TINYINT},
+                     #{creationDate,jdbcType=TIMESTAMP}
+                 )
+            ON DUPLICATE KEY UPDATE
+                                 user_name = #{userName,jdbcType=VARCHAR},
+                                 employee_number =  #{employeeNumber,jdbcType=VARCHAR},
+                                 creation_date = #{creationDate,jdbcType=TIMESTAMP},
+                                 enabled_flag = 1,
+                                 is_admin =  #{isAdmin,jdbcType=TINYINT}
+    </update>
+
+
+    <select id="queryListByNumbers" resultMap="BaseResultMap">
+        select
+        *
+        from sdp_user
+        where enabled_flag = 1 and employee_number in
+        <foreach collection="list" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+
+
+    <select id="getProjectLeaders" resultMap="BaseResultMap">
+        SELECT
+        su.user_name,
+        su.employee_number,
+        su.id
+        from sdp_project_user spu
+        inner join sdp_user su on su.id = spu.user_id and su.enabled_flag = 1
+        where spu.enabled_flag = 1
+        and spu.is_leader = 1
+        <if test="projectId != null and projectId != ''">
+            AND spu.project_id = #{projectId}
+        </if>
+    </select>
+
+    <select id="queryUser4Phone" resultMap="BaseResultMap">
+        select * from sdp_user
+        where employee_id is null or employee_id = ''
+           or private_mobile is null or private_mobile = ''
+    </select>
+
+    <update id="updateByEmployeeNumber">
+        update sdp_user
+        set last_login = #{lastLogin}
+        where employee_number = #{employeeNumber}
+    </update>
+
+    <select id="queryCommonUserByProject" resultMap="BaseResultMap">
+        select su.*
+        from sdp_user su
+                 inner join sdp_project_user spu on su.id = spu.user_id
+        where spu.project_id = #{projectId}
+          and spu.is_leader = 0 and spu.enabled_flag =1
+    </select>
+</mapper>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpRuntimeLogMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpRuntimeLog">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="job_id" jdbcType="BIGINT" property="jobId" />
+        <result column="job_instance_id" jdbcType="BIGINT" property="jobInstanceId" />
+        <result column="operation" jdbcType="VARCHAR" property="operation" />
+        <result column="step_action" jdbcType="VARCHAR" property="stepAction" />
+        <result column="operation_stage" jdbcType="VARCHAR" property="operationStage" />
+        <result column="yarn_log_url" jdbcType="VARCHAR" property="yarnLogUrl" />
+        <result column="k8s_log_url" jdbcType="VARCHAR" property="k8sLogUrl" />
+        <result column="flink_log_url" jdbcType="VARCHAR" property="flinkLogUrl" />
+        <result column="stack_trace" jdbcType="LONGVARCHAR" property="stackTrace" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+        <result column="operation_time" jdbcType="TIMESTAMP" property="operationTime" />
+    </resultMap>
+
+    <resultMap id="BaseResultMap1" type="com.chitu.bigdata.sdp.api.model.SdpRuntimeLog">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="job_id" jdbcType="BIGINT" property="jobId" />
+        <result column="job_instance_id" jdbcType="BIGINT" property="jobInstanceId" />
+        <result column="operation" jdbcType="VARCHAR" property="operation" />
+        <result column="step_action" jdbcType="VARCHAR" property="stepAction" />
+        <result column="operation_stage" jdbcType="VARCHAR" property="operationStage" />
+        <result column="yarn_log_url" jdbcType="VARCHAR" property="yarnLogUrl" />
+        <result column="k8s_log_url" jdbcType="VARCHAR" property="k8sLogUrl" />
+        <result column="flink_log_url" jdbcType="VARCHAR" property="flinkLogUrl" />
+        <result column="stack_trace" jdbcType="LONGVARCHAR" property="stackTrace" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+        <result column="operation_time" jdbcType="TIMESTAMP" property="operationTime" />
+        <result column="engine_cluster" jdbcType="VARCHAR" property="engineCluster" />
+    </resultMap>
+
+    <sql id="BaseTable">
+        sdp_runtime_log
+    </sql>
+
+    <select id="getByJobId" parameterType="com.chitu.bigdata.sdp.api.bo.SdpRuntimeLogBO" resultMap="BaseResultMap1">
+        SELECT
+        srl.job_id,
+        srl.job_instance_id,
+        srl.operation,
+        srl.step_action,
+        srl.operation_stage,
+        srl.yarn_log_url,
+        srl.k8s_log_url,
+        srl.flink_log_url,
+        srl.stack_trace,
+        srl.creation_date,
+        srl.operation_time,
+        se.engine_cluster
+        from sdp_runtime_log srl
+        inner join sdp_job sj on sj.id = srl.job_id and sj.enabled_flag = 1
+        inner join sdp_engine se on se.id = json_extract(sj.config_content, '$.engineId') and se.enabled_flag = 1
+        <where>
+            srl.enabled_flag = 1
+            <if test="jobId != null">
+                AND srl.job_id = #{jobId}
+            </if>
+        </where>
+        order by srl.operation_time
+    </select>
+
+    <select id="getDiLog" parameterType="com.chitu.bigdata.sdp.api.bo.SdpRuntimeLogBO" resultMap="BaseResultMap">
+        SELECT
+        id,
+        job_id,
+        job_instance_id,
+        operation,
+        step_action,
+        operation_stage,
+        yarn_log_url,
+        flink_log_url,
+        stack_trace,
+        creation_date,
+        operation_time
+        from sdp_runtime_log srl
+        where
+        enabled_flag = 1
+        <if test="jobId != null">
+            AND job_id = #{jobId}
+        </if>
+        <if test="latestTime != null">
+            AND creation_date &gt;= #{latestTime}
+        </if>
+        order by operation_time desc
+    </select>
+
+    <select id="getInfo4Url" resultMap="BaseResultMap">
+        SELECT
+        job_id,
+        job_instance_id,
+        operation,
+        step_action,
+        operation_stage,
+        yarn_log_url,
+        flink_log_url,
+        stack_trace,
+        creation_date,
+        operation_time
+        from sdp_runtime_log
+        <where>
+            enabled_flag = 1
+            and operation in ('START','RECOVER')
+            and operation_stage = 'SUCCESS'
+            <if test="jobId != null">
+                AND job_id = #{jobId}
+            </if>
+        </where>
+        order by creation_date desc limit 1
+
+    </select>
+
+    <delete id="cycleDel">
+        delete from sdp_runtime_log where creation_date &lt; DATE_FORMAT(date_sub(curdate(),interval 8 day),'%Y-%m-%d')
+    </delete>
+
+    <delete id="deleteByJobId">
+        delete from sdp_runtime_log
+        <where>
+            <if test="jobId != null">
+                 job_id = #{jobId}
+            </if>
+        </where>
+    </delete>
+
+</mapper>

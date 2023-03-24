@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpMetaTableConfigMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpMetaTableConfig">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="file_id" jdbcType="BIGINT" property="fileId"/>
+        <result column="flink_table_name" jdbcType="VARCHAR" property="flinkTableName"/>
+        <result column="data_source_id" jdbcType="BIGINT" property="dataSourceId"/>
+        <result column="meta_table_name" jdbcType="VARCHAR" property="metaTableName"/>
+        <result column="meta_table_type" jdbcType="VARCHAR" property="metaTableType"/>
+        <result column="flink_ddl" jdbcType="LONGVARCHAR" property="flinkDdl"/>
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag"/>
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId"/>
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy"/>
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy"/>
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate"/>
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate"/>
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_meta_table_config
+    </sql>
+
+    <select id="getUsingSource" resultMap="BaseResultMap">
+        select
+        id,
+        file_id,
+        flink_table_name,
+        data_source_id,
+        meta_table_name,
+        meta_table_type,
+        flink_ddl
+        from sdp_meta_table_config
+        <where>
+            enabled_flag = 1
+            <if test="dataSourceId != null">
+                and data_source_id = #{dataSourceId,jdbcType=BIGINT}
+            </if>
+
+        </where>
+
+    </select>
+
+    <select id="queryByFileId" resultMap="BaseResultMap">
+        select *
+        from sdp_meta_table_config
+        where enabled_flag = 1
+          and file_id = #{fileId}
+    </select>
+
+    <select id="metaTableListByDataSource" parameterType="com.chitu.bigdata.sdp.api.bo.SdpDataSourceBO"
+            resultType="com.chitu.bigdata.sdp.api.vo.DatasourceMetatableInfo">
+        SELECT sj.id                as id,
+               sj.job_name          as jobName,
+               sds.data_source_type as datasourceType,
+               smt.meta_table_name  as tableName,
+               smt.flink_table_name as metaTableName,
+               smt.meta_table_type  as metaTableType,
+               sj.file_id as fileId,
+               sf.folder_id as folderId
+        FROM `sdp_meta_table_relation` smt
+                 LEFT JOIN `sdp_job` sj ON sds.file_id = sj.file_id
+                 left join sdp_file sf on sj.file_id=sf.id
+        WHERE  smt.data_source_id = #{id} and sj.project_id = #{projectId}
+    </select>
+    <select id="queryHudiHadoopConfDirByFileId" resultType="java.lang.String">
+        select sds.hadoop_conf_dir from sdp_meta_table_config smtc left join sdp_data_source sds on smtc.data_source_id = sds.id and sds.enabled_flag =1
+        where smtc.enabled_flag =1
+        and smtc.file_id = #{fileId}
+        and sds.data_source_type = 'hudi'
+        and sds.hadoop_conf_dir is not null
+        and sds.hadoop_conf_dir <![CDATA[ <> ]]> '' limit 1
+    </select>
+    <update id="disableByFileId">
+        update sdp_meta_table_config set  enabled_flag = 0 where  enabled_flag = 1 and file_id = #{fileId}
+    </update>
+</mapper>

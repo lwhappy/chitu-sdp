@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpJobInstanceMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpJobInstance">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="job_id" jdbcType="BIGINT" property="jobId" />
+        <result column="flink_job_id" jdbcType="VARCHAR" property="flinkJobId" />
+        <result column="instance_info" jdbcType="LONGVARCHAR" property="instanceInfo" />
+        <result column="application_id" jdbcType="VARCHAR" property="applicationId" />
+        <result column="jobmanager_address" jdbcType="VARCHAR" property="jobmanagerAddress" />
+        <result column="configuration" jdbcType="LONGVARCHAR" property="configuration" />
+        <result column="job_status" jdbcType="VARCHAR" property="jobStatus" />
+        <result column="raw_status" jdbcType="VARCHAR" property="rawStatus" />
+        <result column="expect_status" jdbcType="VARCHAR" property="expectStatus" />
+        <result column="job_version" jdbcType="VARCHAR" property="jobVersion" />
+        <result column="is_latest" jdbcType="TINYINT" property="isLatest" />
+        <result column="flink_url" jdbcType="VARCHAR" property="flinkUrl" />
+        <result column="version" jdbcType="BIGINT" property="version" />
+        <result column="job_content" jdbcType="LONGVARCHAR" property="jobContent" />
+        <result column="config_content" jdbcType="LONGVARCHAR" property="configContent" />
+        <result column="source_content" jdbcType="LONGVARCHAR" property="sourceContent" />
+        <result column="data_stream_config" jdbcType="LONGVARCHAR" property="dataStreamConfig" />
+        <result column="execute_duration" jdbcType="BIGINT" property="executeDuration" />
+        <result column="start_time" jdbcType="TIMESTAMP" property="startTime" />
+        <result column="end_time" jdbcType="TIMESTAMP" property="endTime" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+        <result column="sign_status" jdbcType="VARCHAR" property="signStatus" />
+    </resultMap>
+
+    <resultMap id="BaseResultMap1" type="com.chitu.bigdata.sdp.api.model.SdpJobInstance">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="job_id" jdbcType="BIGINT" property="jobId" />
+        <result column="flink_job_id" jdbcType="VARCHAR" property="flinkJobId" />
+        <result column="instance_info" jdbcType="LONGVARCHAR" property="instanceInfo" />
+        <result column="application_id" jdbcType="VARCHAR" property="applicationId" />
+        <result column="jobmanager_address" jdbcType="VARCHAR" property="jobmanagerAddress" />
+        <result column="configuration" jdbcType="LONGVARCHAR" property="configuration" />
+        <result column="job_status" jdbcType="VARCHAR" property="jobStatus" />
+        <result column="raw_status" jdbcType="VARCHAR" property="rawStatus" />
+        <result column="expect_status" jdbcType="VARCHAR" property="expectStatus" />
+        <result column="job_version" jdbcType="VARCHAR" property="jobVersion" />
+        <result column="is_latest" jdbcType="TINYINT" property="isLatest" />
+        <result column="flink_url" jdbcType="VARCHAR" property="flinkUrl" />
+        <result column="version" jdbcType="BIGINT" property="version" />
+        <result column="job_content" jdbcType="LONGVARCHAR" property="jobContent" />
+        <result column="config_content" jdbcType="LONGVARCHAR" property="configContent" />
+        <result column="source_content" jdbcType="LONGVARCHAR" property="sourceContent" />
+        <result column="data_stream_config" jdbcType="LONGVARCHAR" property="dataStreamConfig" />
+        <result column="execute_duration" jdbcType="BIGINT" property="executeDuration" />
+        <result column="start_time" jdbcType="TIMESTAMP" property="startTime" />
+        <result column="end_time" jdbcType="TIMESTAMP" property="endTime" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+        <result column="project_code" jdbcType="VARCHAR" property="projectCode" />
+        <result column="job_name" jdbcType="VARCHAR" property="jobName" />
+        <result column="sign_status" jdbcType="VARCHAR" property="signStatus" />
+        <result column="engine_id" jdbcType="BIGINT" property="engineId" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_job_instance
+    </sql>
+
+    <select id="queryInstance4Sync" resultMap="BaseResultMap1" parameterType="com.chitu.bigdata.sdp.api.model.SdpJobInstance">
+        select
+        sj.job_name
+        ,sji.id
+        ,sji.project_id
+        ,sji.job_id
+        ,sji.flink_job_id
+        ,sji.application_id
+        ,sji.job_status
+        ,sji.raw_status
+        ,sji.expect_status
+        ,sji.sign_status
+        ,json_extract(sj.config_content, '$.engineId') engine_id
+        from sdp_job_instance sji
+        inner join sdp_job sj on sj.id = sji.job_id and sj.enabled_flag = 1
+        <where>
+            sji.enabled_flag = 1
+            and sji.is_latest = 1
+            <if test="id != null">
+                and sji.id = #{id}
+            </if>
+            <if test="fileId != null">
+                and sj.file_id = #{fileId}
+            </if>
+            <if test="jobId != null">
+                and sji.job_id = #{jobId}
+            </if>
+            <if test="isToday != null">
+                <choose>
+                    <when test="isToday == 1">
+                        and sji.updation_date <![CDATA[ >= ]]> CURDATE()
+                    </when>
+                    <otherwise>
+                        and sji.updation_date <![CDATA[ < ]]> CURDATE()
+                    </otherwise>
+                </choose>
+            </if>
+        </where>
+    </select>
+
+    <select id="queryById" resultMap="BaseResultMap1" parameterType="com.chitu.bigdata.sdp.api.model.SdpJobInstance">
+        select
+        sp.project_code
+        ,sj.job_name
+        ,sji.id
+        ,sji.project_id
+        ,sji.job_id
+        ,sji.flink_job_id
+        ,sji.application_id
+        ,sji.job_status
+        ,sji.raw_status
+        ,sji.expect_status
+        ,sji.sign_status
+        ,sji.jobmanager_address
+        from sdp_job_instance sji
+        inner join sdp_job sj on sj.id = sji.job_id and sj.enabled_flag = 1
+        inner join sdp_project sp on sp.id = sji.project_id and sp.enabled_flag = 1
+        <where>
+            sji.enabled_flag = 1
+            and sji.is_latest = 1
+            <if test="id != null">
+                and sji.id = #{id}
+            </if>
+            <if test="fileId != null">
+                and sj.file_id = #{fileId}
+            </if>
+        </where>
+    </select>
+
+    <update id="changeLatest" parameterType="com.chitu.bigdata.sdp.api.model.SdpJobInstance">
+        update sdp_job_instance
+        set is_latest = 0,
+        updation_date = CURRENT_TIMESTAMP
+        where job_id = #{jobId}
+    </update>
+
+    <select id="queryByJobId" resultMap="BaseResultMap">
+        select * from sdp_job_instance
+        where enabled_flag = 1
+        and is_latest = 1
+        and job_id = #{jobId}
+    </select>
+
+    <select id="queryByJobIds" resultMap="BaseResultMap">
+        select id,project_id,job_id,flink_job_id,application_id,raw_status,job_status,expect_status,flink_url
+        from sdp_job_instance
+        where enabled_flag = 1
+        and is_latest = 1
+        and job_id in
+        <foreach collection="list" item="jobId" open="(" separator="," close=")" >
+            #{jobId}
+        </foreach>
+    </select>
+
+    <select id="queryLatestVersion" parameterType="com.chitu.bigdata.sdp.api.model.SdpJobInstance" resultMap="BaseResultMap">
+        select * from sdp_job_instance
+        where is_latest = 0
+        and job_id = #{jobId}
+        and job_version = #{jobVersion}
+        order by id desc
+        limit 1
+    </select>
+
+    <update id="updateByJobId" parameterType="com.chitu.bigdata.sdp.api.model.SdpJobInstance">
+        update sdp_job_instance set
+        application_id = #{applicationId},
+        configuration = #{configuration}
+        where project_id = #{projectId}
+        and job_id = #{jobId}
+    </update>
+
+    <update id="repairExpectStatus" parameterType="com.chitu.bigdata.sdp.api.model.SdpJobInstance">
+        update sdp_job_instance
+        <set>
+            <if test="expectStatus != null and expectStatus != ''">
+                expect_status = #{expectStatus}
+            </if>
+        </set>
+        where job_status = #{jobStatus}
+        and id = #{id}
+    </update>
+
+    <update id="disables" parameterType="java.util.List">
+        update sdp_job_instance set enabled_flag = 0,is_latest = 0
+        where job_id in
+        <foreach collection="list" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="queryExceptionInstance" resultMap="BaseResultMap">
+        select * from sdp_job_instance
+        where job_status != expect_status
+        and is_latest = 1
+        and application_id is not null
+        and application_id != ''
+    </select>
+
+    <select id="queryLatestRecords" resultMap="BaseResultMap1">
+        select sj.job_name,sji.*
+        from
+        sdp_job_instance sji left join sdp_job sj on sji.job_id = sj.id
+        where
+        sji.enabled_flag = 1
+        and sji.job_id =  #{jobId}
+        and sji.flink_job_id is not null
+        and sji.flink_job_id &lt;&gt; ''
+        order by sji.id desc limit #{size}
+    </select>
+    <select id="queryLatestInstance4Job" resultMap="BaseResultMap1">
+         <!--获取每个job的最新实例-->
+        select id,job_id,flink_job_id from sdp_job_instance
+        where id in
+        (
+            select max(sji.id)
+            from sdp_job_instance sji
+            where sji.flink_job_id is not null
+            and sji.flink_job_id &lt;&gt; ''
+            <if test="dateSubDay != null and dateSubDay > 0 ">
+                and sji.end_time between DATE_FORMAT(DATE_SUB(CURDATE(),INTERVAL #{dateSubDay} DAY),'%Y-%m-%d 00:00:00') and now()
+            </if>
+            group by job_id
+        )
+    </select>
+    <select id="queryBeforeInstanceBaseOnLatest" resultMap="BaseResultMap1">
+        select sji.id,sji.job_id, sji.flink_job_id
+        from sdp_job_instance sji
+        where sji.flink_job_id is not null
+        and sji.flink_job_id &lt;&gt; ''
+        <if test="dateSubDay != null and dateSubDay > 0 ">
+            and sji.end_time between DATE_FORMAT(DATE_SUB(CURDATE(),INTERVAL #{dateSubDay} DAY),'%Y-%m-%d 00:00:00') and now()
+        </if>
+        and sji.job_id = #{jobId}
+        and sji.id &lt; #{latestId}
+    </select>
+
+    <select id="queryRunningJob" resultMap="BaseResultMap">
+        select
+           sji.id,
+           sji.job_id,
+           sji.flink_job_id,
+           sji.execute_duration,
+           sji.application_id,
+           sji.config_content,
+           sj.id as job_id
+        from sdp_job sj
+        inner join sdp_job_instance sji
+        on sj.enabled_flag = 1
+        and sji.enabled_flag = 1
+        and sji.is_latest = 1
+        and sj.id = sji.job_id
+        and raw_status = 'RUNNING'
+        and sji.flink_job_id is not null
+        and sji.flink_job_id != ''
+        and sji.execute_duration is not null ;
+    </select>
+
+    <select id="queryLatestJobs" resultMap="BaseResultMap">
+        select sji.id, sji.job_id,sji.flink_job_id,sj.file_id as fileId,sji.job_content,sj.business_flag as businessFlag
+        from sdp_job_instance sji
+        inner join sdp_job sj on sj.id = sji.job_id and sj.enabled_flag = 1 and sji.enabled_flag =1 and  sji.is_latest =1
+        inner join sdp_file sf on sj.file_id = sf.id and sj.enabled_flag =1 and sf.enabled_flag = 1
+        where
+        sji.flink_job_id is not null
+        and sji.flink_job_id != ''
+        and sf.file_type ='SQL'
+        and sji.raw_status ='RUNNING'
+    </select>
+
+    <select id="queryFailedJobs" resultType="java.lang.Long">
+        select job_id
+        from sdp_job_instance
+        where raw_status = 'FAILED'
+        and application_id is not null
+        and start_time is not null
+        and end_time is not null
+        and execute_duration > #{executeDuration}
+        and is_latest = 1
+    </select>
+
+    <select id="queryJobById" resultMap="BaseResultMap">
+        select * from sdp_job_instance
+        where raw_status ='RUNNING'
+        and is_latest = 1
+        and job_id = #{jobId}
+        limit 1
+    </select>
+
+
+</mapper>

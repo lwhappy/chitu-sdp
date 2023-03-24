@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpRawStatusHistoryMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpRawStatusHistory">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="job_id" jdbcType="BIGINT" property="jobId" />
+        <result column="instance_id" jdbcType="BIGINT" property="instanceId" />
+        <result column="from_status" jdbcType="VARCHAR" property="fromStatus" />
+        <result column="to_status" jdbcType="VARCHAR" property="toStatus" />
+        <result column="trigger" jdbcType="VARCHAR" property="trigger" />
+        <result column="remark" jdbcType="VARCHAR" property="remark" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_raw_status_history
+    </sql>
+
+    <insert id="insert">
+        insert into sdp_raw_status_history(job_id,instance_id,from_status,to_status,`trigger`,creation_date)
+        values(#{jobId},#{instanceId},#{fromStatus},#{toStatus},#{trigger},CURRENT_TIMESTAMP)
+    </insert>
+
+    <select id="queryByFileId" resultMap="BaseResultMap">
+        select * from
+        sdp_meta_table_config
+        where enabled_flag = 1
+        and file_id = #{fileId}
+    </select>
+</mapper>

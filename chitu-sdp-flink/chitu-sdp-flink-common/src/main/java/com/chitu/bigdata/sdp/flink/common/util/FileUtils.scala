@@ -1,0 +1,61 @@
+
+package com.chitu.bigdata.sdp.flink.common.util
+
+import java.io._
+import java.net.URL
+import java.util
+import scala.collection.JavaConversions._
+
+object FileUtils extends org.apache.commons.io.FileUtils {
+
+  def createTempDir(rootDir: String): File = {
+    val TEMP_DIR_ATTEMPTS = 10000
+    val osName = System.getProperties.getProperty("os.name")
+    var tempDir = System.getProperty("java.io.tmpdir")
+    if(rootDir != null && osName != "Windows 10"){
+      tempDir = rootDir
+    }
+    val baseDir = new File(tempDir)
+    val baseName = System.currentTimeMillis + "-"
+    for (counter <- 0 until TEMP_DIR_ATTEMPTS) {
+      val tempDir = new File(baseDir, baseName + counter)
+      if (tempDir.mkdir) {
+        return tempDir
+      }
+    }
+    throw new IllegalStateException(s"Failed to create directory within $TEMP_DIR_ATTEMPTS  attempts (tried $baseName 0 to $baseName ${TEMP_DIR_ATTEMPTS - 1})")
+  }
+
+  def exists(path: String): Unit = {
+    require(path != null && path.nonEmpty && new File(path).exists(), s"file $path is not exist!")
+  }
+
+  def getPathFromEnv(env: String): String = {
+    val path = System.getenv(env)
+    require(Utils.notEmpty(path), s"$env is not set on system env")
+    val file = new File(path)
+    require(file.exists(), s"$env is not exist!")
+    file.getAbsolutePath
+  }
+
+  def resolvePath(parent: String, child: String): String = {
+    val file = new File(parent, child)
+    require(file.exists, s"${file.getAbsolutePath} is not exist!")
+    file.getAbsolutePath
+  }
+
+  def listFileAsURL(dirPath: String): util.List[URL] = {
+    new File(dirPath) match {
+      case x if x.exists() && x.isDirectory =>
+        val files = x.listFiles()
+        if (files != null && files.nonEmpty) {
+          files.map(f => f.toURI.toURL).toList
+        } else {
+          util.Collections.emptyList()
+        }
+      case _ => util.Collections.emptyList()
+    }
+  }
+
+
+}

@@ -1,0 +1,432 @@
+management.endpoints.web:
+  base-path: /
+  exposure.include: "*"
+
+logging:
+  level:
+    com.chitu.bigdata.sdp.mapper: trace
+    com.chitu.bigdata.sdp.job.JobStatusSyncThread: trace
+    com.chitu.bigdata.sdp.service: info
+    com.chitu.bigdata.sdp.service.lineage.LineageService: error
+    com.chitu.bigdata.sdp.service.RedisTemplateService: error
+    com.chitu.bigdata.sdp.service.ApproveService: error
+    com.chitu.auth.common.token.store.redis.RedisTokenStore: warn
+    com.chitu.auth.common.service.TokenService: warn
+    com.chitu.bigdata.sdp.interceptor.EnvInterceptor: warn
+    com.chitu.bigdata.sdp.service.DataHubService: error
+    com.chitu.bigdata.sdp.job.KafkaConsumerOffsetFetchJob: warn
+    com.chitu.bigdata.sdp.service.datasource.KafkaDataSource: warn
+
+spring:
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.jdbc.Driver
+    # 改成自己的
+    url: jdbc:mysql://chitu-mysql:3306/chitu?tinyInt1isBit=false&useUnicode=true&characterEncoding=utf-8&autoReconnect=true&failOverReadOnly=false&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=Asia/Shanghai&allowMultiQueries=true
+    username: root
+    password: 123456
+    hikari:
+      connection-test-query: SELECT 1
+      minimum-idle: 3
+      maximum-pool-size: 24
+      pool-name: ${spring.application.name}-CP
+      idle-timeout: 10000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      auto-commit: true
+  redis:
+    host: chitu-redis
+    port: 6379
+    #password: 123456
+    database: 1
+    timeout: 3000
+    pool:
+      max-active: 2000
+      max-idle: 20
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: -1
+      max-request-size: -1
+
+
+sdp:
+  env: dev
+  #该配置主要是给定时任务使用
+  envList: dev,uat,prod
+
+
+alert:
+  email:
+    emailHostName: smtp.163.com
+    senderEmail: aabbcc1235789@163.com
+    senderName: 赤兔实时平台
+    senderPassword: UVHNBAWMLXIIBLOC
+  default:
+    rules:
+      - ruleName: 6分钟内检查点完成次数小于等于0次
+        ruleDesc: 6分钟内检查点完成次数小于等于0次
+        indexName: NUMBER_CHECKPOINT
+        timeDiff: 6
+        operator: LESS_THAN_EQUAL
+        threshold: 0
+        effectiveTime: 00:00-23:59
+        alertRate: 30
+        notifiType: {"P1":"CROSS_SOUND,TELEPHONE","P2":"CROSS_SOUND,TELEPHONE","P3":"CROSS_SOUND","P4":""}
+        effectiveState: STOP
+      - ruleName: topic消费延迟超过30分钟
+        ruleDesc: topic消费延迟超过30分钟
+        indexName: DELAY
+        timeDiff:
+        operator: GREATER_THAN_EQUAL
+        threshold: 30
+        effectiveTime: 00:00-23:59
+        alertRate: 30
+        notifiType: {"P1":"CROSS_SOUND,TELEPHONE","P2":"CROSS_SOUND","P3":"","P4":""}
+        effectiveState: STOP
+      - ruleName: 5分钟内重启大于等于3次
+        ruleDesc: 5分钟内重启大于等于3次
+        indexName: NUMBER_RESTARTS
+        timeDiff: 5
+        operator: GREATER_THAN_EQUAL
+        threshold: 3
+        effectiveTime: 00:00-23:59
+        alertRate: 20
+        notifiType: {"P1":"CROSS_SOUND,SHORT_MESSAGE,TELEPHONE","P2":"CROSS_SOUND,TELEPHONE","P3":"CROSS_SOUND","P4":""}
+        effectiveState: STOP
+      - ruleName: 作业运行中断
+        ruleDesc: 外部原因导致作业中断
+        indexName: INTERRUPT_OPERATION
+        timeDiff:
+        operator: GREATER_THAN_EQUAL
+        threshold:
+        effectiveTime: 00:00-23:59
+        alertRate: 30
+        notifiType: {"P1":"CROSS_SOUND,SHORT_MESSAGE,TELEPHONE","P2":"CROSS_SOUND,TELEPHONE","P3":"CROSS_SOUND","P4":""}
+        effectiveState: STOP
+      - ruleName: 任务背压持续30分钟
+        ruleDesc: 任务背压持续30分钟
+        indexName: BACKPRESSURED
+        timeDiff: 30
+        operator:
+        threshold:
+        effectiveTime: 00:00-23:59
+        alertRate: 30
+        notifiType: {"P1":"CROSS_SOUND,TELEPHONE","P2":"CROSS_SOUND","P3":"","P4":""}
+        effectiveState: STOP
+      - ruleName: topic最近1小时消费数小于等于10条
+        ruleDesc: topic最近1小时消费数小于等于10条
+        indexName: CONSUME_RECORDS
+        timeDiff: 60
+        operator: LESS_THAN_EQUAL
+        threshold: 10
+        effectiveTime: 00:00-23:59
+        alertRate: 30
+        notifiType: {"P1":"CROSS_SOUND,TELEPHONE","P2":"CROSS_SOUND","P3":"","P4":""}
+        effectiveState: STOP
+      - ruleName: topic待消费数大于等于100000
+        ruleDesc: topic待消费数大于等于100000
+        indexName: WAIT_RECORDS
+        timeDiff:
+        operator: GREATER_THAN_EQUAL
+        threshold: 100000
+        effectiveTime: 00:00-23:59
+        alertRate: 30
+        notifiType: {"P1":"CROSS_SOUND,TELEPHONE","P2":"CROSS_SOUND","P3":"","P4":""}
+        effectiveState: STOP
+
+kafka:
+  consumer.sasl.groupId: sdp_flink_group
+
+flink:
+  common:
+    savepointDir: /sdp/savepoints/ #保存点路径
+  config:
+    flinkVersions:
+      - version: 1.14.3
+        betaFlag: 0
+        confDir: /opt/apache/flink-1.14.3/conf/
+      - version: 1.15.2
+        betaFlag: 1
+        confDir: /opt/apache/flink-1.15.2/conf/
+    defaultMap:
+      state.checkpoints.dir: /sdp/ck/
+      execution.checkpointing.externalized-checkpoint-retention: RETAIN_ON_CANCELLATION
+      state.checkpoints.num-retained: 5
+    dStreamTemplate: eNqFVE1PE0EYvpPwH5p40cPuttiI6Y0QbkYPctAYQqbb2e3a3dnN7NTQhENBPoK2tjGtkhJRVLARpUYModrKn9nZpSf+gu9sW1hqCJfJzPvxvM887ztz40as97wZdH9qpkFyvdVy0D3glWW//uOs08gy5rgpRSGGnmWmgV0ZOUjNYtmmuhIm9FcpY6uuRLGJkYulhJxIKsKiZLBj2gULE6aoNtEMXRkfg3rrZV5tBd/fBPVdKPJEMxZwRspgExUWNWSYeYolihheJDbBc+NjFLsMUSa5TFj1QioWybgA9L/tAOv/w+VItIwYw5bD3FRsIpGcTN69fSc5eQHRe/ur16jd5OW61y37rf3gy+tb1wCGayqWiMfjAid4ceQXl3j1VbDfEnfLIjdrIUehtppzM2m4DWAxLKeRmsMkk4oNHKO53vHvgcd/e3TWKfmbLV7d87onQa3JP2731iv+p6L/fjdYbo9AygZRKRaaIzMVYzSPR7H5902+3BTsntppCxGkY6pohondggvqnHOERqs5xzaIuLpNIUwoPwwTqOcc+sIBVdiMyocXsJpnhk0igAbRgSfD9JkgmZiID+Q7B/SbO7xTERxnHk1Nz957PP/g/vSMMjU7f29m6uFseJq7GtuyM0A2mhqihyKK2as1e++2eavd61aDxkpEyqsA8wSZhk4wdExDphtqyqsl77jYvzRfXTo9OD492TrdKfH1D2IWrwe10IIE70LNUwrtki6cMJ6JkHCr4h1/ZcjNDdoEZF3TZi5Ywxda4u0jUfH3Hn9dini8ToOvHfKDxuXcvnN8LGKVSd5KY/pAmwXbQ4EwrN0Xq1MUei3tBys/+Nbf/mOQNRNZWKfIycqYoLR5SZZoyYOdoLrG11Zh5PxWzfv7EgKixS1s2bQg948ZWaNIFTqlYnE5OUpCzSKDjI85hoPhz4E/yMHwHm0qhQ7QczjtkAjNqbS8P7uggNfesMDvv2n7h3VEdXf4u5X6G75RDjrF070lCBeBsoMosmRR8/MvgIrYcriQSMVgZPMYJPoHmYNstA==
+    sqlTemplate: eNqtVU1PG0cYviPxH1ZKDu1hZ+0UJa2lHlDELYJDOLSqomi8O15PvV+dmSV2k0hAA/TDFCuChhqahFZQqxQctRU11A5/xrOLT/kLfWfXwEJEc6kPa+/7vvO8H/O8j69d0wZfteLeHyWHepXBwnLc25cr89HaqzfdZlmIgBcMw6N2WTiUcIQDbJYJ8pltJAfSp275JtcZcQjmRM+j/JihLIZFAsevucQThul7JWoboyOQb2lZNtrx3g/x2jYk+axEq8TSLeLg2qMSpk7IiM6wII883yP3RkcY4QIzoXOhrHatoGVOnANGv29B1W+Ho0w0wkIQNxC8oN3Ij90a+/CDm2O3ziEGz/4aNFffk8tr/d5y1N6Nf336/jsAk2dBy+dyOYUTf3sQzc7Jxvfxblv1Vsa87OLAYL5Z4VYRugEsQVARmxXiWQVt6Lh8Vu6ty/mWQvjcL7rYwzZhRok6hNc4dHCGA5dhVgKfeqo8n0GYms5pmEKNfpmNXmzH84dpc9GzA/hxuUVSJWYoqO9lAKlnI/gibAY70OCN3LDFM8CotSW7K6rGiU/Gb0/f+fT+1OTtCWN8+v6difG708nbvauxXd+CYrNHE/T1tmzsKH6stgY/PZftw0GvETefnGW9GjD0sENtj8BUS9jhRMHJRr3fmU2blgtzJ/udk+ONk626XHqp+PJuUBdXdeCuGTIGNNbPnUChfFJwe6Xf+U1gXhleExTLHV9wsCZbVJeHByrj0Y58Ws94+t2mXPxT7jcvnk2doyMZK/JCt0jYVGkabHcVwmnudFjdWTWvud34ySu58TolLCo52CU2w0EZEQ8XnQtjyabc34obi3JxASgXtVf7r7+DgGxyl7g+q6H01UIlhk01p4KWQ2OXizDLmHqjIwENCOgC6ERAYGd8picOmGdBEyyEEuCgqgLK0vgXzv8oODNGgprVm3Svos1vorWvo80Xl1et3zkaLiHQBK4r7affOwYGyp+fD5ZWMjS5sL2wHiYjSt7UhqSNJdmRYhNKY4UA30e59HPB78JE9CIWZuaG3gLJBGHH8R/oDoB6ZiI5/KpITr8kp5qURviBoC5YGbIoB2KbQse2jXjgUPEf2ct0hiBgjaM61kHIGAjfA0ZBFc7YlO3YD5lJELUcokM+4oeioN0cCkc2Dq4QhQEnoKou9MMobK4qeXJqciIlR8KKdRh++pcE3Oj/s624ggLMsIuq1WpBA2UKiRa9/Bt0KN3r0+g6CIc8WoX4fmfv+kOIfvymuwHAwG+5M5/aNW76jGgfa9cfJr8ea3KzdXL842BpiAPUyKRMYuCPA5r5F64ALrU=
+
+
+
+thread:
+  monitor:
+    coreSize: 10
+    maxSize: 30
+    keepAliveTime: 10
+    queueCapacity: 1000
+    threadNamePrefix: monitor-pool-
+
+regression:
+  connector:
+    projectId: 259
+
+
+
+management:
+  metrics:
+    enable:
+      kafka: false
+
+file:
+  edit:
+    checkCreateTime: 202211072030
+
+
+# 检查点保存点同步本地目录
+clusterSyncLocalDir: /app/bigdata-sdp/
+kubernetes:
+  #构建镜像等待时间
+  buildImageTimeout: 300
+  #任务启动后检测状态次数，每次等待5秒
+  startMaxCheckNumber: 60
+  #k8s日志高级搜索过滤字段
+  logFilterField: kubernetes.pod.name
+  imagePrefix: flink-application-sdp-
+  dockerFilePrefix: Dockerfile-
+  sqlBaseImage: flink-application-sdp-sql-client
+  flinkUserJarPrefix: local:///opt/flink/usrlib/
+  sql114Jar: bigdata-sdp-flink-sqlclient-1.14-1.0.0-SNAPSHOT.jar
+  sql115Jar: bigdata-sdp-flink-sqlclient-1.15-1.0.0-SNAPSHOT.jar
+  hadoopConfigMapName: hadoop-sdp
+  jobManagerServiceAccount: flink-service-account
+  envMap:
+    uat:
+      k8sLogUrl: https://bdp-uat.ky-tech.com.cn/#/ops/log-query/application-log?applog_config=
+      k8sLogIndex: erp-java1-k8s-uat-flink-20*
+      clusters:
+        - clusterName: uat kubernetes测试集群
+          clusterCode: kubernetes_test
+          flinkClient114Url: http://10.121.18.1:12228
+          flinkClient115Url: http://10.121.18.1:12229
+          hadoopConfDir: /opt/apache/hadoop-one-ticket/etc/hadoop
+          dockerFileWorkspace: /data/sdp/uat
+          dockerHubAddress: bigdata-uat-k8s-harbor.ky-tech.com.cn/bigdata-application/
+          caCertData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMvakNDQWVhZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJeU1EWXhOekV4TWpRek1sb1hEVE15TURZeE5ERXhNalF6TWxvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTGY4Ckd1K3NITENpczJXK1pCdzdzRFNKWjZCUjBsSEF5bVhaWngwYnU4MDlLKzBnUlFEM2l5TXhLZFV4d25iODhZVngKeHBQMGVxV251Ulc5TVFpZjI2dm4zcXRmRDM2cXV5SC9pRzVpQjVjblRZZU1SbWxzeUdLcWlpcGJQbFVIQmhWZgpOenlMdVlsem10SnovdlBSd2x4WGdtalo1c1UwYzZUcGo1QzJrQUYzbmthVkJ5a1lpZ1BCSmVJZEFaTWprb3F2Clp5bkRtbU9HQlduQldCR1h5eTRSYVpsRzBaazQ2Z282QldhQTQrUGdiNGVRd21hTTZhemxKNDdKMCs1MmJwdUoKUnJJTlFIRnp4aVpNdkplOU1hbnpXbTBYZjdRT051aVI2RktRL1l4TEVKdW0zQlhScXRNaHFIQW11Tnh4Y1l2Lwp6UUx4MkF4NzdFeW0vc09IVmhNQ0F3RUFBYU5aTUZjd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0hRWURWUjBPQkJZRUZDUVZTVzdNSzAvNXBRZ0EwN2lvM1ZydmgzWmZNQlVHQTFVZEVRUU8KTUF5Q0NtdDFZbVZ5Ym1WMFpYTXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBQkZrN1FaUThRb1RiZE9TZnBFRgo0cnlOb09pdHg2WmEyblVNUXZkSzFwRmdkdkljMXhScWN1Wk51WTl3cmQ4bmw4ZEFqdVdtdFlzMjBvbnJRYXZrCkpvUWlsS05sb1RsUmdpZFFzMWttQ3dsSkNRQ3RMUVE4dVNIK2tXaFFMVFVIRFN1VnJLbEtFOGN4emlJdXlJRzUKMXNBL1pVMitaWlg2clRuRE1EQzJacllPcHNsSEgwb3poL3pZRUVaWmo5RHZqaHE4aGNqNVN3Z0VITDErWGw5bwpWRkVWb2Y3SVg5VDAzZTU5VlVKdkZiK0pzUTd3RzRFaUI1a1lwZ0Y2T1BVdFpwdWlMWXFwUXA3T0FROXNLMmNFClA3RWFHK3d5TjdlbE9yLzJyd2ZpTGk2NmtaQ0x4Z1BBWlBQYUo2L1RpZWplSThtYW1KYjkzbExKZFpHRDlVeTAKbHNrPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+          clientCertData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURJVENDQWdtZ0F3SUJBZ0lJTmFTTndyL3Y5OUV3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TWpBMk1UY3hNVEkwTXpKYUZ3MHlNekEyTVRjeE1USTBNelJhTURReApGekFWQmdOVkJBb1REbk41YzNSbGJUcHRZWE4wWlhKek1Sa3dGd1lEVlFRREV4QnJkV0psY201bGRHVnpMV0ZrCmJXbHVNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQXVWSXdZTkFIdEl3R280bmIKQlBRRGVCWnQ2cGR0eHl4Y3I3b2ZwNm54cnZ5cm03ZVFKOWJpS24zRW9KMTVPTTh6MUVpNUNlSzEvMjg4bmRVeQowVjMyZ0dSQk9UZzh4MkVIUVgvTVNJVExucHA2ZnNNMHpNRTB1enltMVNEZHhMNGRqZlIyV0E5NXhCSXllcm9LCkpHVlU5OGcyMjhkU0pkNkl2OElJSFhvdXIyQnpvSFd5cXNORWNrUkFpV0JQcjlsWmhjVGczWUczcm85bVJZV2UKL29sTWxFbURsR25wUTFjeGJKakFUUFk3T1JoYXRKclBqZ0lvVmQ0Tlc5dFVDdzFLckNnVDZ1bmhlK0tYL2g3RwoxcllSRk1MdVBaYXo4T25uYlRuVzNGd2hZMG41RlJIc3pMU1FHZzk1bVp3RWdYT0dkVXJoa1UrMEtTN2lBVnR4Ck52QTBBUUlEQVFBQm8xWXdWREFPQmdOVkhROEJBZjhFQkFNQ0JhQXdFd1lEVlIwbEJBd3dDZ1lJS3dZQkJRVUgKQXdJd0RBWURWUjBUQVFIL0JBSXdBREFmQmdOVkhTTUVHREFXZ0JRa0ZVbHV6Q3RQK2FVSUFOTzRxTjFhNzRkMgpYekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBRVBGMVhRd0cva1BWTWdHTEw1RFhFanFEMDkrd0F4RXQ4cEdkCkx2aXZsT2FmL2ZhVDFBQkF4UXoxdVdlMEFTMUtuQU9hVGRWWGJDQURqUSs5N0RzeHlZRGVCbUQ2SEovaWxTTVAKSHR3ZXUxMW1uOGo1WnYrQzZNYjVudHVOR1VmRUxwY2ZlQzRuWGU4V2RnKzk0cVE2ZW5KOEMvQmtCenE5SG1nVwpkRExaNjFZOW1ZaHFhRzhXeGcwbDB0Q0l2dUU2NmpkU0NoT3ZsUTBjMFVWSm5yNjEyQWZnM29oWlVNc0dMcEFpCjg3bjJJS3ZhemdhdUZtcHM2SWxMRXdKV0tMTkgvYmt4S2pWWU1TY1ZTenNSY2sySVZuaUk2MjhHQjBzaVNzU1cKQWNDa0kvdVdoblRUSGdYOFJMUCtRanRpT3ZiVmlZclRMOTdicitweGgwYlFaNytad3c9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+          clientKeyData: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFb3dJQkFBS0NBUUVBdVZJd1lOQUh0SXdHbzRuYkJQUURlQlp0NnBkdHh5eGNyN29mcDZueHJ2eXJtN2VRCko5YmlLbjNFb0oxNU9NOHoxRWk1Q2VLMS8yODhuZFV5MFYzMmdHUkJPVGc4eDJFSFFYL01TSVRMbnBwNmZzTTAKek1FMHV6eW0xU0RkeEw0ZGpmUjJXQTk1eEJJeWVyb0tKR1ZVOThnMjI4ZFNKZDZJdjhJSUhYb3VyMkJ6b0hXeQpxc05FY2tSQWlXQlByOWxaaGNUZzNZRzNybzltUllXZS9vbE1sRW1EbEducFExY3hiSmpBVFBZN09SaGF0SnJQCmpnSW9WZDROVzl0VUN3MUtyQ2dUNnVuaGUrS1gvaDdHMXJZUkZNTHVQWmF6OE9ubmJUblczRndoWTBuNUZSSHMKekxTUUdnOTVtWndFZ1hPR2RVcmhrVSswS1M3aUFWdHhOdkEwQVFJREFRQUJBb0lCQVFDSjA1T0JYUlp0ODdvNApSSjJzZUdKZ0hLWlEwNkJrZ2h6STRLOE1QanN0L21NTzQ1MkYwNjNQRmt4M2U4YWROcFVBYTdtYW5ZN24wMjRNCm9IUXovQ01KYUFhT0xNSWZNbzEzN0RrZE1nNVIvZWZlZ1FXeXhucVdTa3gxdEFUYmZ0MXlKdjhoRFJsdGRtOHUKa1ZCYnN6VlhOd045dnliY1hUM3RCN3lMVjhTQ3p2LzlHU3I4MUxzNDkyOEw5Q202NzhkY253cVk3QzMzL25ENwppWDM2UWd2cWp5cTYwUElrN0Y3aEtmejNEVjVYZHVvWlZmVW5YSWtxRDNrMXpmYjNlNTE4Mmp0eDNEWExSNEFYCnIrbFhJd2FFT1Uwd0pLZnlaR2tJTS8ySXdSM3hvYWdwTUpaQWJ2dUJIeDV0SmwzNUdSUDZvM1R2OHZQVlkzWTcKWk16Z1hBYVZBb0dCQU43bGIyV1BNQWI2NWlyVmN0cTFWQS9KMFhLbmFWRDRoMlh6WlJsZEZ5cUlBRmhzd1dxVwpIQ1hCQUpTK1BHWXhGZ2xxR0R2NlpUMFVVTmlCSFI0S3hVL0s0SUxSalBwY1BpYjFETFVCWVVEQTByQmFMTjBNClJmTUtqTkhieW9BR2F6SEhIVmFseUQ5UGJVNy9RSmYvTjRsbzliZERnaTBYUjBwNHVOdmpuWkNQQW9HQkFOVFkKSXhQdExFa0J6dVIvYWhtTUFBYTlWek45eDNyMzFFMnZ4RlpIRkttN1FrYXVteUlnb0FyTHJRVmFPUDlpNWQ1Twp0TkVpOXR4cnFvSGg3VnM2Q1lFdTBKU3FOTUJOT0Vlc1IyNnhZTEk1MWZFS1VWT2lSQS9pRGFnM24vTVZlU1N2Cll0R0hWUXU2cUhpejJPNVhpZHVpaEw0TU1Ub2N0bFZDOXJ2RUVCcHZBb0dBUTdWbWRXOWRvNEVyMGU4dENJcjAKa2ljNFhKL0dPamFFeXM5NDhvOTRyZzdLTEJJOVh1ZGlmWVYzYTdldUdVem42TXcxdUdLRHhsNFpnT3NYc1R5TQpXNFRCVm52WlcyUVI3VHViTkpES3ZpVFUyNFZKQTR6cTRyMWRzWklXblhWVnNyVk5rRGlqNzdkcytRWkkxT05PCk40dU91TERsSmxWZjdwdGxiRVprWXJrQ2dZQXJVd053M3VvUXdrbDJ3V2k3WW4vdTMwT011NkdMS2o4UXdTSloKM1lZYk5uNjdISGQvYnR5azFlaVdHbE5YeUsyNW5wTzNya0pKZzdEbFZ6T1ZTaTc5R0taa1hIRDRZNzk4OTFoaQo4OEFYQnliQk5iUndMYXRsQUVKL1p6TXJxOGRJN0ZwVkJCTVBuQ01HenJUdGJ1d2t4T1A0TzBzWjVSWklMS1ZFCmV4ZzhDUUtCZ0QxSHJNdTNKUm8vbWhXUmpDTTFudHFQWWhkNi8vQ3ZQSWR2bEc2Q2NSMzI4WldoMEhZU243V2sKeVAvTDdYWWFLZmh5Z2tSR085ZWorWmJ4NFlSZ2xwMkhkVVJGOG9VOFZ0RytwOVFwNVQrQTdzYnRMZzNDdVFmeQowRnVGODJaSEdZSHN4dTkvQ3hXaDZLMXQ4VThGY2g4L3RpOEFQTjljb25RZDM3bW51UmJpCi0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0tCg==
+          masterUrl: https://10.83.192.110:6443
+          namespaces:
+            - hadoop-test-ha
+            - hadoop-test-ha2
+    prod:
+      k8sLogUrl: https://bdp-uat.ky-tech.com.cn/#/ops/log-query/application-log?applog_config=
+      k8sLogIndex: erp-java1-k8s-uat-flink-20*
+      clusters:
+        - clusterName: uat kubernetes测试集群
+          clusterCode: kubernetes_test
+          flinkClient114Url: http://10.121.18.1:12228
+          flinkClient115Url: http://10.121.18.1:12229
+          hadoopConfDir: /opt/apache/hadoop-one-ticket/etc/hadoop
+          dockerFileWorkspace: /data/sdp/prod
+          dockerHubAddress: bigdata-uat-k8s-harbor.ky-tech.com.cn/bigdata-application/
+          caCertData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMvakNDQWVhZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJeU1EWXhOekV4TWpRek1sb1hEVE15TURZeE5ERXhNalF6TWxvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTGY4Ckd1K3NITENpczJXK1pCdzdzRFNKWjZCUjBsSEF5bVhaWngwYnU4MDlLKzBnUlFEM2l5TXhLZFV4d25iODhZVngKeHBQMGVxV251Ulc5TVFpZjI2dm4zcXRmRDM2cXV5SC9pRzVpQjVjblRZZU1SbWxzeUdLcWlpcGJQbFVIQmhWZgpOenlMdVlsem10SnovdlBSd2x4WGdtalo1c1UwYzZUcGo1QzJrQUYzbmthVkJ5a1lpZ1BCSmVJZEFaTWprb3F2Clp5bkRtbU9HQlduQldCR1h5eTRSYVpsRzBaazQ2Z282QldhQTQrUGdiNGVRd21hTTZhemxKNDdKMCs1MmJwdUoKUnJJTlFIRnp4aVpNdkplOU1hbnpXbTBYZjdRT051aVI2RktRL1l4TEVKdW0zQlhScXRNaHFIQW11Tnh4Y1l2Lwp6UUx4MkF4NzdFeW0vc09IVmhNQ0F3RUFBYU5aTUZjd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0hRWURWUjBPQkJZRUZDUVZTVzdNSzAvNXBRZ0EwN2lvM1ZydmgzWmZNQlVHQTFVZEVRUU8KTUF5Q0NtdDFZbVZ5Ym1WMFpYTXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBQkZrN1FaUThRb1RiZE9TZnBFRgo0cnlOb09pdHg2WmEyblVNUXZkSzFwRmdkdkljMXhScWN1Wk51WTl3cmQ4bmw4ZEFqdVdtdFlzMjBvbnJRYXZrCkpvUWlsS05sb1RsUmdpZFFzMWttQ3dsSkNRQ3RMUVE4dVNIK2tXaFFMVFVIRFN1VnJLbEtFOGN4emlJdXlJRzUKMXNBL1pVMitaWlg2clRuRE1EQzJacllPcHNsSEgwb3poL3pZRUVaWmo5RHZqaHE4aGNqNVN3Z0VITDErWGw5bwpWRkVWb2Y3SVg5VDAzZTU5VlVKdkZiK0pzUTd3RzRFaUI1a1lwZ0Y2T1BVdFpwdWlMWXFwUXA3T0FROXNLMmNFClA3RWFHK3d5TjdlbE9yLzJyd2ZpTGk2NmtaQ0x4Z1BBWlBQYUo2L1RpZWplSThtYW1KYjkzbExKZFpHRDlVeTAKbHNrPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+          clientCertData: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURJVENDQWdtZ0F3SUJBZ0lJTmFTTndyL3Y5OUV3RFFZSktvWklodmNOQVFFTEJRQXdGVEVUTUJFR0ExVUUKQXhNS2EzVmlaWEp1WlhSbGN6QWVGdzB5TWpBMk1UY3hNVEkwTXpKYUZ3MHlNekEyTVRjeE1USTBNelJhTURReApGekFWQmdOVkJBb1REbk41YzNSbGJUcHRZWE4wWlhKek1Sa3dGd1lEVlFRREV4QnJkV0psY201bGRHVnpMV0ZrCmJXbHVNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQXVWSXdZTkFIdEl3R280bmIKQlBRRGVCWnQ2cGR0eHl4Y3I3b2ZwNm54cnZ5cm03ZVFKOWJpS24zRW9KMTVPTTh6MUVpNUNlSzEvMjg4bmRVeQowVjMyZ0dSQk9UZzh4MkVIUVgvTVNJVExucHA2ZnNNMHpNRTB1enltMVNEZHhMNGRqZlIyV0E5NXhCSXllcm9LCkpHVlU5OGcyMjhkU0pkNkl2OElJSFhvdXIyQnpvSFd5cXNORWNrUkFpV0JQcjlsWmhjVGczWUczcm85bVJZV2UKL29sTWxFbURsR25wUTFjeGJKakFUUFk3T1JoYXRKclBqZ0lvVmQ0Tlc5dFVDdzFLckNnVDZ1bmhlK0tYL2g3RwoxcllSRk1MdVBaYXo4T25uYlRuVzNGd2hZMG41RlJIc3pMU1FHZzk1bVp3RWdYT0dkVXJoa1UrMEtTN2lBVnR4Ck52QTBBUUlEQVFBQm8xWXdWREFPQmdOVkhROEJBZjhFQkFNQ0JhQXdFd1lEVlIwbEJBd3dDZ1lJS3dZQkJRVUgKQXdJd0RBWURWUjBUQVFIL0JBSXdBREFmQmdOVkhTTUVHREFXZ0JRa0ZVbHV6Q3RQK2FVSUFOTzRxTjFhNzRkMgpYekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBRVBGMVhRd0cva1BWTWdHTEw1RFhFanFEMDkrd0F4RXQ4cEdkCkx2aXZsT2FmL2ZhVDFBQkF4UXoxdVdlMEFTMUtuQU9hVGRWWGJDQURqUSs5N0RzeHlZRGVCbUQ2SEovaWxTTVAKSHR3ZXUxMW1uOGo1WnYrQzZNYjVudHVOR1VmRUxwY2ZlQzRuWGU4V2RnKzk0cVE2ZW5KOEMvQmtCenE5SG1nVwpkRExaNjFZOW1ZaHFhRzhXeGcwbDB0Q0l2dUU2NmpkU0NoT3ZsUTBjMFVWSm5yNjEyQWZnM29oWlVNc0dMcEFpCjg3bjJJS3ZhemdhdUZtcHM2SWxMRXdKV0tMTkgvYmt4S2pWWU1TY1ZTenNSY2sySVZuaUk2MjhHQjBzaVNzU1cKQWNDa0kvdVdoblRUSGdYOFJMUCtRanRpT3ZiVmlZclRMOTdicitweGgwYlFaNytad3c9PQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg==
+          clientKeyData: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFb3dJQkFBS0NBUUVBdVZJd1lOQUh0SXdHbzRuYkJQUURlQlp0NnBkdHh5eGNyN29mcDZueHJ2eXJtN2VRCko5YmlLbjNFb0oxNU9NOHoxRWk1Q2VLMS8yODhuZFV5MFYzMmdHUkJPVGc4eDJFSFFYL01TSVRMbnBwNmZzTTAKek1FMHV6eW0xU0RkeEw0ZGpmUjJXQTk1eEJJeWVyb0tKR1ZVOThnMjI4ZFNKZDZJdjhJSUhYb3VyMkJ6b0hXeQpxc05FY2tSQWlXQlByOWxaaGNUZzNZRzNybzltUllXZS9vbE1sRW1EbEducFExY3hiSmpBVFBZN09SaGF0SnJQCmpnSW9WZDROVzl0VUN3MUtyQ2dUNnVuaGUrS1gvaDdHMXJZUkZNTHVQWmF6OE9ubmJUblczRndoWTBuNUZSSHMKekxTUUdnOTVtWndFZ1hPR2RVcmhrVSswS1M3aUFWdHhOdkEwQVFJREFRQUJBb0lCQVFDSjA1T0JYUlp0ODdvNApSSjJzZUdKZ0hLWlEwNkJrZ2h6STRLOE1QanN0L21NTzQ1MkYwNjNQRmt4M2U4YWROcFVBYTdtYW5ZN24wMjRNCm9IUXovQ01KYUFhT0xNSWZNbzEzN0RrZE1nNVIvZWZlZ1FXeXhucVdTa3gxdEFUYmZ0MXlKdjhoRFJsdGRtOHUKa1ZCYnN6VlhOd045dnliY1hUM3RCN3lMVjhTQ3p2LzlHU3I4MUxzNDkyOEw5Q202NzhkY253cVk3QzMzL25ENwppWDM2UWd2cWp5cTYwUElrN0Y3aEtmejNEVjVYZHVvWlZmVW5YSWtxRDNrMXpmYjNlNTE4Mmp0eDNEWExSNEFYCnIrbFhJd2FFT1Uwd0pLZnlaR2tJTS8ySXdSM3hvYWdwTUpaQWJ2dUJIeDV0SmwzNUdSUDZvM1R2OHZQVlkzWTcKWk16Z1hBYVZBb0dCQU43bGIyV1BNQWI2NWlyVmN0cTFWQS9KMFhLbmFWRDRoMlh6WlJsZEZ5cUlBRmhzd1dxVwpIQ1hCQUpTK1BHWXhGZ2xxR0R2NlpUMFVVTmlCSFI0S3hVL0s0SUxSalBwY1BpYjFETFVCWVVEQTByQmFMTjBNClJmTUtqTkhieW9BR2F6SEhIVmFseUQ5UGJVNy9RSmYvTjRsbzliZERnaTBYUjBwNHVOdmpuWkNQQW9HQkFOVFkKSXhQdExFa0J6dVIvYWhtTUFBYTlWek45eDNyMzFFMnZ4RlpIRkttN1FrYXVteUlnb0FyTHJRVmFPUDlpNWQ1Twp0TkVpOXR4cnFvSGg3VnM2Q1lFdTBKU3FOTUJOT0Vlc1IyNnhZTEk1MWZFS1VWT2lSQS9pRGFnM24vTVZlU1N2Cll0R0hWUXU2cUhpejJPNVhpZHVpaEw0TU1Ub2N0bFZDOXJ2RUVCcHZBb0dBUTdWbWRXOWRvNEVyMGU4dENJcjAKa2ljNFhKL0dPamFFeXM5NDhvOTRyZzdLTEJJOVh1ZGlmWVYzYTdldUdVem42TXcxdUdLRHhsNFpnT3NYc1R5TQpXNFRCVm52WlcyUVI3VHViTkpES3ZpVFUyNFZKQTR6cTRyMWRzWklXblhWVnNyVk5rRGlqNzdkcytRWkkxT05PCk40dU91TERsSmxWZjdwdGxiRVprWXJrQ2dZQXJVd053M3VvUXdrbDJ3V2k3WW4vdTMwT011NkdMS2o4UXdTSloKM1lZYk5uNjdISGQvYnR5azFlaVdHbE5YeUsyNW5wTzNya0pKZzdEbFZ6T1ZTaTc5R0taa1hIRDRZNzk4OTFoaQo4OEFYQnliQk5iUndMYXRsQUVKL1p6TXJxOGRJN0ZwVkJCTVBuQ01HenJUdGJ1d2t4T1A0TzBzWjVSWklMS1ZFCmV4ZzhDUUtCZ0QxSHJNdTNKUm8vbWhXUmpDTTFudHFQWWhkNi8vQ3ZQSWR2bEc2Q2NSMzI4WldoMEhZU243V2sKeVAvTDdYWWFLZmh5Z2tSR085ZWorWmJ4NFlSZ2xwMkhkVVJGOG9VOFZ0RytwOVFwNVQrQTdzYnRMZzNDdVFmeQowRnVGODJaSEdZSHN4dTkvQ3hXaDZLMXQ4VThGY2g4L3RpOEFQTjljb25RZDM3bW51UmJpCi0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0tCg==
+          masterUrl: https://10.83.192.110:6443
+          namespaces:
+            - hadoop-test-ha
+yarn:
+  envMap:
+    uat:
+      defaultConfig:
+        queue: default
+        container:
+          minVcores: 1 #容器最小核数
+          minMem: 2    #容器最小内存，单位G
+      clusterSyncLocalDir: /app/bigdata-sdp/
+      clusters:
+        - clusterName: uat赤兔独立集群
+          clusterCode: chitu_sdp
+          flinkClient114Url: http://sdp-submit114:12282
+          flinkClient115Url: http://sdp-submit115:12283
+          hadoopConfDir: /opt/apache/hadoop/etc/hadoop
+          flinkProxyUrl:
+          flinkHistoryUrl:
+    prod:
+      defaultConfig:
+        queue: sdp_flink
+        container:
+          minVcores: 1 #容器最小核数
+          minMem: 2    #容器最小内存，单位G
+      clusterSyncLocalDir: /app/bigdata-sdp/
+      clusters:
+        - clusterName: prod赤兔独立集群
+          clusterCode: chitu_sdp
+          flinkClient114Url: http://sdp-submit114:12282
+          flinkClient115Url: http://sdp-submit115:12283
+          hadoopConfDir: /opt/apache/hadoop/etc/hadoop
+          flinkProxyUrl:
+          flinkHistoryUrl:
+
+prometheus:
+  envMap:
+    uat:
+      urlPrefix: http://127.0.0.1:3000/d/-0rFuzoZk/flink-dashboard-11049?orgId=1&refresh=5s&var-datasource=Prometheus&var-job_name=%s
+      baseUrl: http://127.0.0.1:9090/api/v1/
+      queryUrl: http://127.0.0.1:9090/api/v1/query
+    prod:
+      urlPrefix: http://127.0.0.1:3000/d/-0rFuzoZk/flink-dashboard-11049?orgId=1&refresh=5s&var-datasource=Prometheus&var-job_name=%s
+      baseUrl: http://127.0.0.1:9090/api/v1/
+      queryUrl: http://127.0.0.1:9090/api/v1/query
+
+check:
+  envMap:
+    uat:
+      resource:
+        #是否开启资源校验 true|false
+        mSwitch: false
+      #写入hive校验
+      hive:
+        mSwitch: true
+      kafka:
+        mSwitch: false
+    prod:
+      resource:
+        #是否开启资源校验 true|false
+        mSwitch: true
+      #写入hive校验
+      hive:
+        mSwitch: true
+      kafka:
+        mSwitch: false
+
+
+
+datasourcecfg:
+  envMap:
+    uat:
+      defaultHiveLineageAddress: jdbc:hive2://10.83.192.8:10000
+      hive:
+        - hiveCluster: 大数据UAT Hive
+          dataSourceUrl: /opt/apache/hive-bigdata/conf
+          hadoopConfDir: /opt/apache/hadoop-bigdata/etc/hadoop/
+          address: jdbc:hive2://10.83.192.8:10000
+        - hiveCluster: 赤兔UAT Hive
+          dataSourceUrl: /opt/apache/hive-one-ticket/conf
+          hadoopConfDir: /opt/apache/hadoop-one-ticket/etc/hadoop/
+          address:
+    prod:
+      defaultHiveLineageAddress: jdbc:hive2://10.83.192.8:10000
+      hive:
+        - hiveCluster: 大数据UAT Hive
+          dataSourceUrl: /opt/apache/hive-bigdata/conf
+          hadoopConfDir: /opt/apache/hadoop-bigdata/etc/hadoop/
+          address: jdbc:hive2://10.83.192.8:10000
+        - hiveCluster: 赤兔UAT Hive
+          dataSourceUrl: /opt/apache/hive-one-ticket/conf
+          hadoopConfDir: /opt/apache/hadoop-one-ticket/etc/hadoop/
+          address:
+
+custom:
+  #这部分定时任务调度时间不区分环境
+  tableDelayAlertRule:
+    scheduledTime: 30000
+  tableNullSizeAlertRule:
+    scheduledTime: 30000
+  autoPullJobConf:
+    fixedDelay: 60000
+  time:
+    fixedDelay: 60000
+  monitorJobStatus:
+    fixedDelay: 180000
+  cpSpClearJob:
+    cron: 0 1 2 * 11 ?
+  kafkaConsumerOffsetFetchJob:
+    fixedDelay: 60000
+  endToEndDelayMonitorJob:
+    fixedDelay: 300000
+  #下面定时任务的参数区分环境
+  envMap:
+    uat:
+      tableDelayAlertRule:
+        startSwitch: 1
+        threshold: 1
+        IntervalTime: 30
+      tableNullSizeAlertRule:
+        startSwitch: 1
+        threshold: 1
+        diffTime: 5
+        IntervalTime: 30
+      hbaseCDCCheckAlertRule:
+        startSwitch: 1
+        IntervalTime: 30
+      autoPullJobConf:
+        startSwitch: 1
+        executeDuration: 10800000
+      time:
+        firstMonitorInterval: 1
+      cpSpClearJob: #检查点和保存点定期清除任务
+        param: dateSubDay=1
+      endToEndDelayMonitorJob:
+        mSwitch: true
+        threshold: 60000
+        intervalTime: 30
+      jobStatusSyncJob:
+        fixedDelay: 10000
+    prod:
+      tableDelayAlertRule:
+        startSwitch: 1
+        threshold: 1
+        IntervalTime: 30
+      tableNullSizeAlertRule:
+        startSwitch: 1
+        threshold: 1
+        diffTime: 5
+        IntervalTime: 30
+      hbaseCDCCheckAlertRule:
+        startSwitch: 1
+        IntervalTime: 30
+      autoPullJobConf:
+        startSwitch: 1
+        executeDuration: 10800000
+      time:
+        firstMonitorInterval: 5
+      cpSpClearJob: #检查点和保存点定期清除任务
+        param: dateSubDay=1
+      endToEndDelayMonitorJob:
+        mSwitch: true
+        threshold: 60000
+        intervalTime: 30
+      jobStatusSyncJob:
+        fixedDelay: 10000
+
+
+
+mybatis-plus:
+  configuration:
+    default-fetch-size: 100
+    default-statement-timeout: 30
+    map-underscore-to-camel-case: true
+  mapperLocations: "classpath*:mapper*/*.xml"
+  global-config:
+    db-config:
+      id-type: AUTO
+      table-under-line: true
+      capital-mode: false
+      logic-delete-field: enabled_flag
+      logic-delete-value: 0
+      logic-not-delete-value: 1
+      insert-strategy: NOT_NULL
+      update-strategy: NOT_NULL
+      where-strategy: NOT_NULL
+
+spring.jackson.default-property-inclusion: non_null
+
+business-line:
+  bls:
+    - code: ERP
+      name: ERP
+    - code: CRM
+      name: CRM
+
+

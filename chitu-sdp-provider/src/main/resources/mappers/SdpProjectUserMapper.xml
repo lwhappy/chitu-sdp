@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpProjectUserMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpProjectUser">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="user_id" jdbcType="BIGINT" property="userId" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="is_leader" jdbcType="TINYINT" property="isLeader" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_project_user
+    </sql>
+
+    <select id="queryProject4User" resultMap="BaseResultMap">
+        select * from sdp_project_user
+        where enabled_flag = 1
+        and user_id = #{userId}
+    </select>
+
+    <select id="queryProjectUserIsLeader" resultType="java.lang.Integer">
+        select count(*) from sdp_project_user
+        where enabled_flag = 1 and is_leader != 0
+          and user_id = #{userId}
+    </select>
+
+
+    <select id="selectProjectManger" resultMap="BaseResultMap">
+        select * from sdp_project_user
+        where enabled_flag = 1
+        and is_leader in (1,2)
+        <if test="userId != null ">
+            and user_id = #{userId}
+        </if>
+        <if test="projectId != null ">
+            AND project_id = #{projectId}
+        </if>
+    </select>
+
+
+    <select id="getProjectLeaders" resultMap="BaseResultMap">
+        SELECT
+        id,
+        project_id,
+        user_id,
+        enabled_flag,
+        is_leader
+        from sdp_project_user
+        where
+        enabled_flag = 1
+        and is_leader = 1
+        <if test="projectId != null and projectId != ''">
+            AND project_id = #{projectId}
+        </if>
+    </select>
+
+    <select id="getProjectResponsibles" resultMap="BaseResultMap">
+        SELECT
+        id,
+        project_id,
+        user_id,
+        enabled_flag,
+        is_leader
+        from sdp_project_user
+        where
+        enabled_flag = 1
+        and is_leader = 2
+        <if test="projectId != null and projectId != ''">
+            AND project_id = #{projectId}
+        </if>
+    </select>
+
+    <select id="getProjectUsers" resultMap="BaseResultMap">
+        SELECT
+        id,
+        project_id,
+        user_id,
+        enabled_flag,
+        is_leader
+        from sdp_project_user
+        where
+        enabled_flag = 1
+        and is_leader in (0,1)
+        <if test="projectId != null and projectId != ''">
+            AND project_id = #{projectId}
+        </if>
+    </select>
+
+
+    <select id="getUserBypid" resultMap="BaseResultMap">
+        SELECT
+        id,
+        project_id,
+        user_id,
+        enabled_flag,
+        is_leader
+        from sdp_project_user
+        where
+        enabled_flag = 1
+        and is_leader in (0,1)
+        and id not in (
+        select id
+        from sdp_project_user
+        where  enabled_flag = 1
+        and is_leader  = 2
+        <if test="projectId != null and projectId != ''">
+            AND project_id = #{projectId}
+        </if>
+        )
+        <if test="projectId != null and projectId != ''">
+            AND project_id = #{projectId}
+        </if>
+    </select>
+
+
+    <select id="getByInstance" resultMap="BaseResultMap">
+        SELECT
+        id,
+        project_id,
+        user_id,
+        enabled_flag,
+        is_leader
+        from sdp_project_user
+        where
+        enabled_flag = 1
+        and is_leader in (0,1)
+        <if test="projectId != null and projectId != ''">
+            AND project_id = #{projectId,jdbcType=BIGINT}
+        </if>
+        <if test="userId != null and userId != ''">
+            AND user_id = #{userId,jdbcType=BIGINT}
+        </if>
+    </select>
+
+
+    <select id="selectIsExist" resultMap="BaseResultMap">
+        SELECT
+        id,
+        project_id,
+        user_id,
+        enabled_flag,
+        is_leader
+        from sdp_project_user
+        where
+        enabled_flag = 1
+        <if test="projectId != null ">
+            AND project_id = #{projectId,jdbcType=BIGINT}
+        </if>
+        <if test="userId != null ">
+            AND user_id = #{userId,jdbcType=BIGINT}
+        </if>
+        <if test="isLeader != null">
+            AND is_leader = #{isLeader,jdbcType=TINYINT}
+        </if>
+
+    </select>
+
+
+    <update id="disableByInstance" >
+        update sdp_project_user
+        set enabled_flag = 0
+        where
+        enabled_flag = 1
+        <if test="projectId != null ">
+            AND project_id = #{projectId,jdbcType=BIGINT}
+        </if>
+        <if test="userId != null ">
+            AND user_id = #{userId,jdbcType=BIGINT}
+        </if>
+        <if test="isLeader != null ">
+            AND is_leader = #{isLeader,jdbcType=TINYINT}
+        </if>
+    </update>
+
+
+</mapper>

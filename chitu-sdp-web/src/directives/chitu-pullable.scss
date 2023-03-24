@@ -1,0 +1,62 @@
+$size: 2px; // 鼠标未悬浮时的拖拽线宽度
+$overSize: 10px; // 鼠标悬浮时的拖拽线宽度，相较未悬浮时变宽以优化操作体验
+$overBorderSize: 2px; // 鼠标悬浮时高亮靠近边缘那一侧的边框
+$highLightColor: #006EFF;
+
+.pullable-line {
+  position: absolute;
+  z-index: 1;
+  background-color: transparent;
+  
+
+  &--top, &--bottom {
+    left: 0;
+    width: 100%;
+    height: $size;
+    cursor: row-resize;
+
+    &:hover {
+      height: $overSize;
+      border: 0px solid $highLightColor;
+    }
+  }
+
+  &--top {
+    top: 0;
+    &:hover {
+      border-top-width: $overBorderSize;
+    }
+  }
+
+  &--bottom {
+    bottom: 0;
+    &:hover {
+      border-bottom-width: $overBorderSize;
+    }
+  }
+
+  &--left, &--right {
+    top: 0;
+    width: $size;
+    height: 100%;
+    cursor: col-resize;
+
+    &:hover {
+      width: $overSize;
+      border: 0px solid $highLightColor;
+    }
+  }
+  &--left {
+    left: 0;
+    &:hover {
+      border-left-width: $overBorderSize;
+    }
+  }
+
+  &--right {
+    right: 0;
+    &:hover {
+      border-right-width: $overBorderSize;
+    }
+  }
+}

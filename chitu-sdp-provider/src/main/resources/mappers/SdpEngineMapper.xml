@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpEngineMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpEngine">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="engine_name" jdbcType="VARCHAR" property="engineName" />
+        <result column="engine_version" jdbcType="VARCHAR" property="engineVersion" />
+        <result column="engine_url" jdbcType="VARCHAR" property="engineUrl" />
+        <result column="business_flag" jdbcType="VARCHAR" property="businessFlag" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+        <result column="engine_cluster" jdbcType="VARCHAR" property="engineCluster" />
+        <result column="engine_queue" jdbcType="VARCHAR" property="engineQueue" />
+        <result column="engine_type" jdbcType="VARCHAR" property="engineType" />
+        <result column="uat_engine_cluster" jdbcType="VARCHAR" property="uatEngineCluster" />
+        <result column="uat_engine_queue" jdbcType="VARCHAR" property="uatEngineQueue" />
+        <result column="namespace" jdbcType="VARCHAR" property="namespace" />
+        <result column="uat_namespace" jdbcType="VARCHAR" property="uatNamespace" />
+    </resultMap>
+
+    <sql id="BaseTable">
+        sdp_engine
+    </sql>
+    <resultMap id="ResultMap" type="com.chitu.bigdata.sdp.api.domain.SdpEngineInfo">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="engine_name" jdbcType="VARCHAR" property="engineName" />
+        <result column="engine_version" jdbcType="VARCHAR" property="engineVersion" />
+        <result column="engine_url" jdbcType="VARCHAR" property="engineUrl" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+        <result column="user_count" jdbcType="BIGINT" property="userCount" />
+        <result column="refer_project_count" jdbcType="BIGINT" property="referProjectCount" />
+        <result column="engine_cluster" jdbcType="VARCHAR" property="engineCluster" />
+        <result column="engine_queue" jdbcType="VARCHAR" property="engineQueue" />
+        <result column="engine_type" jdbcType="VARCHAR" property="engineType" />
+        <result column="uat_engine_cluster" jdbcType="VARCHAR" property="uatEngineCluster" />
+        <result column="uat_engine_queue" jdbcType="VARCHAR" property="uatEngineQueue" />
+        <result column="namespace" jdbcType="VARCHAR" property="namespace" />
+        <result column="uat_namespace" jdbcType="VARCHAR" property="uatNamespace" />
+    </resultMap>
+    <resultMap id="ResultMap4QueueAndSourceConfig" type="com.chitu.bigdata.sdp.api.domain.QueueAndSourceConfig">
+        <result column="engine_queue" jdbcType="VARCHAR" property="engineQueue" />
+        <result column="uat_engine_queue" jdbcType="VARCHAR" property="uatEngineQueue" />
+        <result column="job_name" jdbcType="VARCHAR" property="jobName" />
+        <result column="config_content" jdbcType="VARCHAR" property="configContent" />
+    </resultMap>
+    <sql id="BaseColumn">
+       id,
+       engine_name,
+       engine_version,
+       engine_url,
+       enabled_flag,
+       created_by,
+       updated_by,
+       creation_date,
+       updation_date
+    </sql>
+    <select id="getProjectEngines" resultMap="BaseResultMap">
+        SELECT
+        se.id,
+        se.engine_name,
+        se.engine_version
+        from sdp_project_engine spe
+        LEFT JOIN sdp_engine se on spe.engine_id=se.id and se.enabled_flag = 1
+        where
+        spe.enabled_flag = 1
+        <if test="projectId != null and projectId != ''">
+            AND spe.project_id = #{projectId}
+        </if>
+    </select>
+
+
+    <select id="getByName" resultMap="BaseResultMap">
+        SELECT
+        id,
+        engine_name,
+        engine_version,
+        created_by,
+        creation_date
+        from sdp_engine
+        where
+        enabled_flag = 1
+        <if test="engineName != null and engineName != ''">
+            AND engine_name  like CONCAT('%',#{engineName},'%')
+        </if>
+    </select>
+
+    <select id="getEngineByName" resultMap="BaseResultMap">
+        SELECT
+        id,
+        engine_name,
+        engine_version,
+        engine_url
+        from sdp_engine
+        where
+        enabled_flag = 1
+        <if test="engineName != null and engineName != ''">
+            AND engine_name  like CONCAT('%',#{engineName},'%')
+        </if>
+        <if test="userId != null and userId != 0">
+            AND id in (select engine_id
+            from sdp_engine_user
+            where enabled_flag = 1 and user_id = #{userId})
+        </if>
+
+    </select>
+
+
+    <!--user_count该字段主要用于引擎用户的排序问题处理  -->
+    <select id="searchPage" resultMap="ResultMap">
+        SELECT
+        se.id,
+        se.engine_name,
+        se.engine_version,
+        se.engine_url,
+        se.creation_date,
+        se.engine_queue,
+        se.engine_cluster,
+        se.engine_type,
+        se.uat_engine_cluster,
+        se.uat_engine_queue,
+        se.namespace,
+        se.uat_namespace,
+        count(distinct (seu.id)) as user_count,
+        count(distinct (sp.id)) as refer_project_count
+        from sdp_engine se
+        left join sdp_engine_user seu on seu.engine_id = se.id and seu.enabled_flag = 1
+        left join sdp_project_engine spe on spe.engine_id = se.id and spe.enabled_flag = 1
+        left join sdp_project sp on sp.id = spe.project_id and sp.enabled_flag = 1
+        <where>
+            se.enabled_flag = 1
+            <if test="criteria != null">
+                <if test="criteria.vo.engineName != null and criteria.vo.engineName != ''">
+                    AND se.engine_name  like concat('%', #{criteria.vo.engineName, jdbcType=VARCHAR},'%')
+                </if>
+                <if test="criteria.vo.engineVersion != null and criteria.vo.engineVersion!=''">
+                    AND se.engine_version = #{criteria.vo.engineVersion, jdbcType=BIGINT}
+                </if>
+            </if>
+        </where>
+        group by
+        se.id,
+        se.engine_name,
+        se.engine_version,
+        se.engine_url,
+        se.creation_date,
+        se.engine_queue,
+        se.engine_cluster
+        <if test="criteria != null and criteria.orderByClauses != null ">
+                <trim prefix=" ORDER  BY " suffix="  " suffixOverrides=",">
+                    <foreach collection="criteria.orderByClauses" item="orderByObj">
+                        <if test="orderByObj.field != null and orderByObj.field != ''">
+                            <if test="orderByObj.orderByMode == 0">
+                                #{orderByObj.field} ASC ,
+                            </if>
+                            <if test="orderByObj.orderByMode != 0">
+                                #{orderByObj.field} DESC ,
+                            </if>
+                        </if>
+                    </foreach>
+                </trim>
+        </if>
+    </select>
+
+    <select id="getInfo" parameterType="com.chitu.bigdata.sdp.api.model.SdpEngine" resultMap="BaseResultMap">
+        SELECT * from sdp_engine
+        <where>
+            enabled_flag = 1
+            <if test="engineName != null and engineName != ''">
+                AND engine_name = #{engineName, jdbcType=VARCHAR}
+            </if>
+            <if test="businessFlag != null and businessFlag != ''">
+                and business_flag = #{businessFlag}
+            </if>
+        </where>
+    </select>
+
+    <select id="getQueueAndSourceConfig" resultMap="ResultMap4QueueAndSourceConfig">
+        select
+         json_extract(sj.source_content, '$.jobManagerCpu') as jobManagerCpu,
+         trim(BOTH  '"' from ifnull(json_extract(sj.source_content, '$.jobManagerMem'),'0')) as jobManagerMem,
+         json_extract(sj.source_content, '$.taskManagerCpu') as taskManagerCpu,
+         trim(BOTH  '"' from ifnull(json_extract(sj.source_content, '$.taskManagerMem'),'0')) as taskManagerMem,
+         json_extract(sj.source_content, '$.parallelism') as parallelism,
+         se.engine_queue,
+         se.uat_engine_queue,
+         sj.job_name,
+         sj.config_content
+        from sdp_job sj
+        left join sdp_engine se on JSON_EXTRACT(sj.config_content,'$.engineId') = se.id and se.enabled_flag =1
+        and sj.enabled_flag = 1
+        where sj.id = #{jobId}
+    </select>
+
+    <select id="queryClusterByJobId" resultType="java.lang.String">
+        select ifnull(se.engine_cluster,'sdp_cluster') engine_cluster
+        from sdp_engine se
+        inner join sdp_job sj on JSON_EXTRACT(sj.config_content,'$.engineId') = se.id and sj.enabled_flag =1
+        where se.enabled_flag = 1
+        and sj.id = #{jobId}
+    </select>
+
+    <select id="queryEngineTypeByIds" resultMap="BaseResultMap">
+        select
+        id,engine_type
+        from sdp_engine
+        where
+        id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

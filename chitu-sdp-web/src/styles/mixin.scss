@@ -1,0 +1,121 @@
+  // 注意mac chrome的滚动条默认宽度为 15px 而 windows chrome滚动条宽度为 17px
+  // https://codepen.io/sambible/post/browser-scrollbar-widths
+  // @mixin scrollbar {
+  //   &::-webkit-scrollbar {
+  //     //https://blog.csdn.net/waiter_hh/article/details/106352978
+  //     //element表格设置固定列后，滚动到底部错位的问题解决
+  //     width: 8px;
+  //     height: 8px;
+  //   }
+  
+  //   &::-webkit-scrollbar-thumb {
+  //     cursor: pointer;
+  //     border-radius: 4px;
+  //     // background-color: #76a9eb;
+  //     background-color: rgba(0,0,0,0.30);
+  //     border: 1px solid white;
+  //   }
+  
+  //   &::-webkit-scrollbar-track {
+  //     border: 0 solid transparent;
+  //     background-color: #fff;
+  //   }
+  
+  //   &::-webkit-scrollbar-corner {
+  //     background: transparent;
+  //   }
+  
+  //   &::-webkit-scrollbar-button {
+  //     width: 0;
+  //     height: 0;
+  //     display: none;
+  //   }
+  // }
+  // @mixin blackScrollbar {
+  //   &::-webkit-scrollbar {
+  //     width: 8px;
+  //     height: 8px;
+  //   }
+  
+  //   &::-webkit-scrollbar-thumb {
+  //     cursor: pointer;
+  //     border-radius: 4px;
+  //     background-color: #1E202D;
+  //     // background-color: #c5b6e8;;
+  //     border: 1px solid white;
+  //   }
+  
+  //   &::-webkit-scrollbar-track {
+  //     border: 0 solid transparent;
+  //     background-color: #fff;
+  //   }
+  
+  //   &::-webkit-scrollbar-corner {
+  //     background: transparent;
+  //   }
+  
+  //   &::-webkit-scrollbar-button {
+  //     width: 0;
+  //     height: 0;
+  //     display: none;
+  //   }
+  // }
+  @mixin text-overflow {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  @mixin job-status-colors{
+    .icon-yunhangchenggong {
+      color: #1dcc8b;
+    }
+    .icon-yunhangshibai {
+      color: #F95353;
+    }
+    .icon-zanting {
+      color: #ca7df8;
+    }
+    .icon-dengdaizhong {
+      color: #ffaa4d;
+    }
+    .icon-yunhangzhong {
+      color: #0066FF;
+    }
+    .icon-weiyunhang {
+      color: #999999;
+    }
+  }
+  
+  @mixin job-type-colors{
+    .icon-shujukaifa2 {
+      color: #ffb325;
+    }
+    .icon-biaoge1 {
+      color: #10bea4;
+    }
+    .icon-gongnengjiedian1 {
+      color: #328aff;
+    }
+    .icon-biao{
+      color: #01c14b;
+    }
+    .icon-shell {
+      color: #01c14b;
+    }
+    .icon-hiveSQL {
+      color: #05c3e0;
+    }
+    .icon-sparkSQL {
+      color: #02c1a8;
+    }
+    .icon-presto {
+      color: #629eff;
+    }
+    .icon-sqoop {
+      color: #01c14b;
+    }
+    .icon-choushurenwu {
+      color: #ffb325;
+    }
+  }

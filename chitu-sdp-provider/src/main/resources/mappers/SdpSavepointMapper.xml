@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpSavepointMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpSavepoint">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="job_id" jdbcType="BIGINT" property="jobId" />
+        <result column="savepoint_name" jdbcType="VARCHAR" property="savepointName" />
+        <result column="trigger_time" jdbcType="TIMESTAMP" property="triggerTime" />
+        <result column="file_path" jdbcType="VARCHAR" property="filePath" />
+        <result column="operate_status" jdbcType="VARCHAR" property="operateStatus" />
+        <result column="operate_err_msg" jdbcType="LONGVARCHAR" property="operateErrMsg" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="env" jdbcType="VARCHAR" property="env" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_savepoint
+    </sql>
+    <select id="queryByJobId" resultMap="BaseResultMap">
+        select
+          id,
+          job_id,
+          savepoint_name,
+          file_path,
+          trigger_time,
+          operate_status,
+          operate_err_msg
+        from sdp_savepoint
+        where
+        enabled_flag = 1
+        and job_id = #{jobId}
+        <if test="operateStatus != null and operateStatus != ''">
+            and operate_status = #{operateStatus}
+        </if>
+        order by id desc
+        limit #{size}
+    </select>
+    <select id="queryWaitClear" resultType="java.lang.Long">
+        select distinct job_id
+        from sdp_savepoint
+        where
+        enabled_flag = 1
+    </select>
+    <select id="queryNonRetainByJobId" resultMap="BaseResultMap">
+        select
+        id,
+        job_id,
+        savepoint_name,
+        file_path,
+        trigger_time,
+        operate_status,
+        operate_err_msg
+        from sdp_savepoint
+        where
+        enabled_flag = 1
+        and job_id = #{jobId}
+        <if test="operateStatus != null and operateStatus != ''">
+            and operate_status = #{operateStatus}
+        </if>
+        order by id desc
+        limit #{retainSize}, #{pageSize}
+    </select>
+    <update id="updateEnabledFlag">
+        update sdp_savepoint set enabled_flag = 0
+        where
+        id in
+        <foreach collection="ids" item="item" separator="," open="(" close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

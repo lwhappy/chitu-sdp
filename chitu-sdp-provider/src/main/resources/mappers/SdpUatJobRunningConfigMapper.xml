@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpUatJobRunningConfigMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpUatJobRunningConfig">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="job_id" jdbcType="BIGINT" property="jobId" />
+        <result column="days" jdbcType="INTEGER" property="days" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="env" jdbcType="VARCHAR" property="env" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_uat_job_running_config
+    </sql>
+    <select id="queryByJobIds" resultMap="BaseResultMap">
+        select
+         *
+        from sdp_uat_job_running_config
+        where
+        job_id  in
+        <foreach collection="jobIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+        and enabled_flag = 1
+    </select>
+</mapper>

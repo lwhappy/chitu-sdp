@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpProjectEngineMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpProjectEngine">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="engine_id" jdbcType="BIGINT" property="engineId" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_project_engine
+    </sql>
+    <resultMap id="ResultMap" type="com.chitu.bigdata.sdp.api.model.SdpEngine">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="engine_name" jdbcType="VARCHAR" property="engineName" />
+        <result column="engine_version" jdbcType="VARCHAR" property="engineVersion" />
+        <result column="engine_url" jdbcType="VARCHAR" property="engineUrl" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+
+    <select id="getEngines" resultMap="ResultMap">
+        SELECT
+        se.id,
+        se.engine_name,
+        se.engine_version,
+        se.engine_url
+        from sdp_project_engine spe
+        LEFT JOIN sdp_engine se on spe.engine_id = se.id and se.enabled_flag = 1
+        where
+        spe.enabled_flag = 1
+        <if test="projectId != null ">
+            AND spe.project_id = #{projectId}
+        </if>
+    </select>
+
+    <select id="getProjectEngines" resultMap="BaseResultMap">
+    SELECT
+    id,
+    project_id,
+    engine_id,
+    enabled_flag
+    from sdp_project_engine
+    where
+    enabled_flag = 1
+    <if test="projectId != null ">
+        AND project_id = #{projectId}
+    </if>
+    </select>
+
+    <select id="selectIsExist" resultMap="BaseResultMap">
+        SELECT
+        id,
+        project_id,
+        engine_id,
+        enabled_flag
+        from sdp_project_engine
+        where
+        enabled_flag = 1
+        <if test="projectId != null ">
+            AND project_id = #{projectId}
+        </if>
+        <if test="engineId != null ">
+            AND engine_id = #{engineId}
+        </if>
+    </select>
+
+    <update id="updateDisable" >
+        update  sdp_project_engine
+        set enabled_flag = 0
+        <where>
+
+        <if test="projectId != null ">
+            AND project_id = #{projectId}
+        </if>
+        <if test="engineId != null ">
+            AND engine_id = #{engineId}
+        </if>
+
+        </where>
+    </update>
+
+</mapper>

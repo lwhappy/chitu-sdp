@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpJarMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpJar">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="name" jdbcType="VARCHAR" property="name" />
+        <result column="version" jdbcType="VARCHAR" property="version" />
+        <result column="flink_version" jdbcType="VARCHAR" property="flinkVersion" />
+        <result column="git" jdbcType="VARCHAR" property="git" />
+        <result column="url" jdbcType="VARCHAR" property="url" />
+        <result column="description" jdbcType="VARCHAR" property="description" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_jar
+    </sql>
+
+    <select id="myGet" resultMap="BaseResultMap">
+        select * from sdp_jar
+        where enabled_flag = 1
+        and id = #{id}
+    </select>
+
+    <select id="queryJar" resultMap="BaseResultMap">
+        select sj.id,sj.name,sj.version,sj.git,sj.description,sj.project_id,sj.creation_date,sj.updation_date,su.user_name as created_by
+        from sdp_jar sj
+        left join sdp_user su on su.id = sj.created_by and su.enabled_flag = 1
+        <where>
+            sj.enabled_flag = 1
+            <if test="criteria.vo.projectId != null">
+                and sj.project_id = #{criteria.vo.projectId}
+            </if>
+            <if test="criteria.vo.version != null">
+                and sj.version = #{criteria.vo.version}
+            </if>
+            <if test="criteria.vo.name != null and criteria.vo.name != ''">
+                and sj.name like concat('%',#{criteria.vo.name},'%')
+            </if>
+            <if test="criteria.vo.type != null and criteria.vo.type == 'first'">
+                <!--group by sj.name-->
+                <!--返回最新的版本-->
+                and sj.id in (select max(x.id) from  sdp_jar x
+                <where>
+                    x.enabled_flag = 1
+                    <if test="criteria.vo.projectId != null">
+                        and x.project_id = #{criteria.vo.projectId}
+                    </if>
+                </where>
+                group by x.name )
+            </if>
+        </where>
+        <!--<if test="criteria.vo.type != null and criteria.vo.type == 'first'">
+            group by sj.name
+        </if>-->
+        <if test="criteria != null and criteria.orderByClauses != null ">
+            <trim prefix=" ORDER  BY " suffix="  " suffixOverrides=",">
+                <foreach collection="criteria.orderByClauses" item="item">
+                    <if test="item.field != null and item.field != ''">
+                        <if test="item.orderByMode == 0">
+                            #{item.field} ASC
+                        </if>
+                        <if test="item.orderByMode != 0">
+                            #{item.field} DESC
+                        </if>
+                    </if>
+                </foreach>
+            </trim>
+        </if>
+    </select>
+
+    <select id="searchJar" parameterType="com.chitu.bigdata.sdp.api.bo.SdpJarBO" resultMap="BaseResultMap">
+        select * from sdp_jar
+        <where>
+            enabled_flag = 1
+            <if test="projectId != null">
+                and project_id = #{projectId}
+            </if>
+            <if test="name != null and name != ''">
+                and name like concat('%',#{name},'%')
+            </if>
+            <if test="version != null and version != ''">
+                and version = #{version}
+            </if>
+        </where>
+    </select>
+
+    <select id="history" resultMap="BaseResultMap">
+        select sj.id,sj.name,sj.version,sj.git,sj.description,sj.project_id,sj.creation_date,sj.updation_date,su.user_name as created_by
+        from sdp_jar sj
+        left join sdp_user su on su.id = sj.created_by and su.enabled_flag = 1
+        <where>
+            sj.enabled_flag = 1
+            <if test="criteria.vo.projectId != null">
+                and sj.project_id = #{criteria.vo.projectId}
+            </if>
+            <if test="criteria.vo.name != null and criteria.vo.name != ''">
+                and sj.name = #{criteria.vo.name}
+            </if>
+        </where>
+        <if test="criteria != null and criteria.orderByClauses != null ">
+            <trim prefix=" ORDER  BY " suffix="  " suffixOverrides=",">
+                <foreach collection="criteria.orderByClauses" item="item">
+                    <if test="item.field != null and item.field != ''">
+                        <if test="item.orderByMode == 0">
+                            #{item.field} ASC
+                        </if>
+                        <if test="item.orderByMode != 0">
+                            #{item.field} DESC
+                        </if>
+                    </if>
+                </foreach>
+            </trim>
+        </if>
+    </select>
+
+    <select id="queryLatestJar" parameterType="com.chitu.bigdata.sdp.api.bo.SdpJarBO" resultMap="BaseResultMap">
+        select * from sdp_jar
+        <where>
+            enabled_flag = 1
+            <if test="projectId != null">
+                and project_id = #{projectId}
+            </if>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+            <if test="version != null and version != ''">
+                and version = #{version}
+            </if>
+        </where>
+        order by id desc
+        limit 1
+    </select>
+
+    <update id="disableByName">
+        update sdp_jar set enabled_flag = 0
+        where name = #{name} and  project_id = #{projectId}
+    </update>
+</mapper>

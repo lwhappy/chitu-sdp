@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpMetaTableRelationMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpMetaTableRelation">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="file_id" jdbcType="BIGINT" property="fileId" />
+        <result column="flink_table_name" jdbcType="VARCHAR" property="flinkTableName" />
+        <result column="database_name" jdbcType="VARCHAR" property="databaseName" />
+        <result column="meta_table_name" jdbcType="VARCHAR" property="metaTableName" />
+        <result column="meta_table_type" jdbcType="VARCHAR" property="metaTableType" />
+        <result column="data_source_id" jdbcType="BIGINT" property="dataSourceId" />
+        <result column="meta_table_id" jdbcType="BIGINT" property="metaTableId" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_meta_table_relation
+    </sql>
+
+    <select id="queryByFileId" resultMap="BaseResultMap">
+        select file_id,database_name,meta_table_name,meta_table_type,data_source_id
+        from sdp_meta_table_relation
+        where file_id = #{fileId}
+        and meta_table_id is not null
+        and data_source_id is not null
+    </select>
+
+    <delete id="deleteByFileId">
+        delete from sdp_meta_table_relation
+        where file_id = #{fileId}
+        and meta_table_id is not null
+        and data_source_id is not null
+    </delete>
+
+    <select id="queryHiveTable" resultMap="BaseResultMap">
+        select file_id,database_name,meta_table_name,meta_table_type,data_source_id
+        from sdp_meta_table_relation
+        where file_id = #{fileId}
+        and meta_table_id is null
+        and data_source_id is null
+    </select>
+
+    <delete id="deleteHiveTable">
+        delete from sdp_meta_table_relation
+        where file_id = #{fileId}
+        and meta_table_id is null
+        and data_source_id is null
+    </delete>
+
+    <delete id="delByFileId">
+        delete from sdp_meta_table_relation
+        where file_id = #{fileId}
+    </delete>
+
+    <select id="countMetaTable" resultType="integer" parameterType="com.chitu.bigdata.sdp.api.model.SdpMetaTableRelation">
+        SELECT
+        COUNT(*)
+        FROM `sdp_meta_table_relation` smt
+        LEFT JOIN `sdp_job` sj ON smt.file_id = sj.file_id AND sj.enabled_flag=1
+        LEFT JOIN sdp_file sf ON sj.file_id=sf.id AND sf.enabled_flag=1
+        LEFT JOIN sdp_data_source sds ON sds.id=smt.data_source_id AND sds.enabled_flag=1
+        WHERE  smt.data_source_id = #{dataSourceId} AND smt.enabled_flag=1 AND sj.id IS NOT NULL
+        <if test="metaTableName != null and metaTableName != ''">
+            and  smt.meta_table_name like CONCAT('%',#{metaTableName,jdbcType=VARCHAR},'%')
+        </if>
+        <if test="flinkTableName != null and flinkTableName != ''">
+            and  smt.flink_table_name like CONCAT('%',#{flinkTableName,jdbcType=VARCHAR},'%')
+        </if>
+    </select>
+
+    <select id="metaTableListByDataSource" parameterType="com.chitu.bigdata.sdp.api.bo.SdpDataSourceBO"
+            resultType="com.chitu.bigdata.sdp.api.vo.DatasourceMetatableInfo">
+        SELECT sj.id                as id,
+               sj.job_name          as jobName,
+               sds.data_source_type as datasourceType,
+               smt.meta_table_name  as tableName,
+               smt.flink_table_name as metaTableName,
+               smt.meta_table_type  as metaTableType,
+               sj.file_id as fileId,
+               sf.folder_id as folderId
+        FROM `sdp_meta_table_relation` smt
+                 LEFT JOIN `sdp_job` sj ON smt.file_id = sj.file_id and sj.enabled_flag=1
+                 left join sdp_file sf on sj.file_id=sf.id and sf.enabled_flag=1
+                 left join sdp_data_source sds on sds.id=smt.data_source_id and sds.enabled_flag=1
+        WHERE  smt.data_source_id = #{id} and smt.enabled_flag=1 and sj.id IS NOT NULL
+        <if test="tableName != null and tableName != ''">
+            and  smt.meta_table_name like CONCAT('%',#{tableName,jdbcType=VARCHAR},'%')
+        </if>
+        <if test="metaTableName!= null and metaTableName != ''">
+            and  smt.flink_table_name like CONCAT('%',#{metaTableName,jdbcType=VARCHAR},'%')
+        </if>
+        order by sj.job_name
+    </select>
+    <select id="getSourceTableByFileId" resultMap="BaseResultMap">
+        select
+        ds.data_source_url as dataSourceUrl,tc.meta_table_name
+        from sdp_meta_table_relation tc left join sdp_data_source ds on tc.data_source_id = ds.id and tc.enabled_flag = 1 and ds.enabled_flag=1
+        where
+        ds.data_source_type =#{dataSourceType}
+        and tc.file_id = #{fileId}
+        and tc.meta_table_type = #{metaTableType}
+    </select>
+</mapper>

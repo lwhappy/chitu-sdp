@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpDataSourceMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpDataSource">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="data_source_name" jdbcType="VARCHAR" property="dataSourceName" />
+        <result column="data_source_type" jdbcType="VARCHAR" property="dataSourceType" />
+        <result column="remark" jdbcType="LONGVARCHAR" property="remark" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="owner" jdbcType="BIGINT" property="owner" />
+        <result column="stream_load_url" jdbcType="VARCHAR" property="streamLoadUrl" />
+        <result column="data_source_url" jdbcType="VARCHAR" property="dataSourceUrl" />
+        <result column="database_name" jdbcType="VARCHAR" property="databaseName" />
+        <result column="certify_type" jdbcType="VARCHAR" property="certifyType" />
+        <result column="user_name" jdbcType="VARCHAR" property="userName" />
+        <result column="password" jdbcType="VARCHAR" property="password" />
+        <result column="hbase_znode" jdbcType="VARCHAR" property="hbaseZnode" />
+        <result column="hadoop_conf_dir" jdbcType="VARCHAR" property="hadoopConfDir" />
+        <result column="hudi_catalog_path" jdbcType="VARCHAR" property="hudiCatalogPath" />
+        <result column="hive_cluster" jdbcType="VARCHAR" property="hiveCluster" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+    <resultMap id="ResultMap" type="com.chitu.bigdata.sdp.api.vo.DataSourceResp">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="data_source_name" jdbcType="VARCHAR" property="dataSourceName" />
+        <result column="data_source_type" jdbcType="VARCHAR" property="dataSourceType" />
+        <result column="remark" jdbcType="LONGVARCHAR" property="remark" />
+        <result column="project_id" jdbcType="BIGINT" property="projectId" />
+        <result column="owner" jdbcType="BIGINT" property="owner" />
+        <result column="stream_load_url" jdbcType="VARCHAR" property="streamLoadUrl" />
+        <result column="owner_name" jdbcType="VARCHAR" property="ownerName" />
+        <result column="data_source_url" jdbcType="VARCHAR" property="dataSourceUrl" />
+        <result column="database_name" jdbcType="VARCHAR" property="databaseName" />
+        <result column="certify_type" jdbcType="VARCHAR" property="certifyType" />
+        <result column="user_name" jdbcType="VARCHAR" property="userName" />
+        <result column="password" jdbcType="VARCHAR" property="password" />
+        <result column="hbase_znode" jdbcType="VARCHAR" property="hbaseZnode" />
+        <result column="hadoop_conf_dir" jdbcType="VARCHAR" property="hadoopConfDir" />
+        <result column="hudi_catalog_path" jdbcType="VARCHAR" property="hudiCatalogPath" />
+        <result column="hive_cluster" jdbcType="VARCHAR" property="hiveCluster" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+        <result column="is_used" jdbcType="TINYINT" property="isUsed" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_data_source
+    </sql>
+
+
+    <sql id="orderByClauseInfo">
+        <if test="orderByClauses != null">
+            <trim prefix=" ORDER  BY " suffix="  " suffixOverrides=",">
+                <foreach collection="orderByClauses" item="orderByObj">
+                    <if test="orderByObj.field != null and orderByObj.field != ''">
+                        <if test="orderByObj.orderByMode == 0">
+                            #{orderByObj.field} ASC ,
+                        </if>
+                        <if test="orderByObj.orderByMode != 0">
+                            #{orderByObj.field} DESC ,
+                        </if>
+                    </if>
+                </foreach>
+            </trim>
+        </if>
+    </sql>
+
+    <select id="dataSourceList"  resultMap="ResultMap">
+        select
+        distinct
+        sds.id,
+        sds.data_source_name,
+        sds.data_source_type,
+        sds.remark,
+        sds.owner,
+        sds.stream_load_url,
+        su.user_name as owner_name,
+        sds.project_id,
+        sds.data_source_url,
+        sds.database_name,
+        sds.certify_type,
+        sds.user_name,
+        sds.hbase_znode,
+        sds.hadoop_conf_dir,
+        sds.hive_cluster,
+        sds.enabled_flag,
+        sds.creation_date,
+        su1.user_name as updated_by,
+        sds.updation_date,
+        sds.hudi_catalog_path
+        from sdp_data_source sds
+        left join sdp_meta_table_relation smtr on sds.id =smtr.data_source_id and smtr.enabled_flag = 1
+        left join sdp_job sj on smtr.file_id = sj.file_id and sj.enabled_flag = 1
+        left join sdp_user su ON su.id =  sds.owner  AND su.enabled_flag = 1
+        left join sdp_user su1 ON su1.id = sds.updated_by AND su1.enabled_flag = 1
+        where  sds.enabled_flag = 1 
+        <if test="projectId != null">
+            and  sds.project_id = #{projectId,jdbcType=BIGINT}
+        </if>
+        <if test="dataSourceName != null and dataSourceName != ''" >
+            and  sds.data_source_name like CONCAT('%',#{dataSourceName,jdbcType=VARCHAR},'%')
+        </if>
+        <if test="dataSourceType != null and dataSourceType != ''">
+            and  sds.data_source_type = #{dataSourceType,jdbcType=VARCHAR}
+        </if>
+        <if test="tableName != null and tableName != ''">
+            and  smtr.meta_table_name like CONCAT('%',#{tableName,jdbcType=VARCHAR},'%')
+        </if>
+        <if test="metaTableName != null and metaTableName != ''">
+            and  smtr.flink_table_name like CONCAT('%',#{metaTableName,jdbcType=VARCHAR},'%')
+        </if>
+        <if test="jobName != null and jobName != ''">
+            and  sj.job_name like CONCAT('%',#{jobName,jdbcType=VARCHAR},'%')
+        </if>
+        <include refid="orderByClauseInfo"/>
+    </select>
+
+    <select id="selectByName"  resultMap="BaseResultMap">
+        select
+        id,
+        data_source_name,
+        data_source_type,
+        project_id
+        from sdp_data_source
+        <where> 1=1
+            <if test="dataSourceName != null and dataSourceName != ''" >
+                and  data_source_name = #{dataSourceName,jdbcType=VARCHAR}
+            </if>
+            <if test="projectId != null" >
+                and  project_id = #{projectId,jdbcType=VARCHAR}
+            </if>
+        </where>
+
+    </select>
+
+    <select id="getDataSources"  resultMap="BaseResultMap">
+        select
+        id,
+        data_source_name,
+        data_source_type,
+        project_id,
+        remark,
+        owner,
+        stream_load_url,
+        data_source_url,
+        database_name,
+        certify_type,
+        user_name,
+        enabled_flag
+        from sdp_data_source
+        <where>
+            enabled_flag = 1
+            <if test="dataSourceName != null and dataSourceName != ''" >
+                and  data_source_name like CONCAT('%',#{dataSourceName,jdbcType=VARCHAR},'%')
+            </if>
+
+            <if test="projectId != null">
+                and  project_id = #{projectId,jdbcType=BIGINT}
+            </if>
+
+
+            <if test="dataSourceType != null">
+                and  data_source_type = #{dataSourceType,jdbcType=VARCHAR}
+            </if>
+        </where>
+
+    </select>
+
+    <select id="selectType4exPlain"  resultMap="BaseResultMap">
+        select
+        sds.id,
+        sds.data_source_name,
+        sds.data_source_type,
+        sds.enabled_flag
+        from sdp_data_source sds
+        left join sdp_meta_table_config smtc on sds.id = smtc.data_source_id and smtc.enabled_flag = 1
+        <where>
+            sds.enabled_flag = 1
+            <if test="fileId != null " >
+                and  smtc.file_id = #{fileId}
+            </if>
+        </where>
+
+    </select>
+
+
+    <select id="selectForCanalTemp"  resultMap="BaseResultMap">
+        select smtc.meta_table_name as hbase_znode,sds.*
+        from sdp_meta_table_config smtc
+        left join sdp_meta_table_relation smtr on
+        smtc.id = smtr.meta_table_id and smtr.enabled_flag = 1 and smtc.enabled_flag = 1
+        left join sdp_data_source sds on smtc.data_source_id = sds.id  and sds.enabled_flag =1 and smtc.enabled_flag = 1
+        <where>
+            smtr.meta_table_type = 'source'
+            and  sds.data_source_type = 'kafka'
+            <if test="projectId != null " >
+                and sds.project_id =  #{projectId}
+            </if>
+        </where>
+    </select>
+</mapper>

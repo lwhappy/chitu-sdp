@@ -1,0 +1,233 @@
+// @import './variables.scss';
+
+/* http://meyerweb.com/eric/tools/css/reset/ */
+/* v1.0 | 20080212 */
+html,
+body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+font,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: 0;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  overflow: auto;
+  position: relative;
+}
+
+html {
+
+  overflow: hidden;
+
+  ::-webkit-scrollbar {
+    //整体样式
+    height: 8px;
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    //滑动滑块条样式
+    border-radius: 6px;
+    background-color: #ccd4e0;
+    height: 20px;
+  }
+
+  ::-webkit-scrollbar-track {
+    //轨道的样式
+    background-color: #fff;
+  }
+}
+
+.bigData-body {
+  // min-width: 1000px;
+  // min-height:700px ;
+  position: relative;
+  font-size: 12px;
+  color: #333;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: Microsoft Yahei, 微软雅黑, Microsoft Sans Serif, sans-serif !important;
+}
+
+ol,
+ul {
+  list-style: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+blockquote,
+q {
+  quotes: none;
+}
+
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: '';
+  content: none;
+}
+
+/* remember to define focus styles! */
+:focus {
+  outline: 0;
+}
+
+/* remember to highlight inserts somehow! */
+ins {
+  text-decoration: none;
+}
+
+del {
+  text-decoration: line-through;
+}
+
+/* tables still need 'cellspacing="0"' in the markup */
+table {
+  border-spacing: 0;
+  border-collapse: separate;
+  font-size: 14px;
+  color: #000000;
+}
+
+/* 去掉 input type=number 的默认样式 */
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+// 滤镜
+html[hc="1"] {
+  filter: url("#hc_extension_off");
+
+  .chitu-header-panel,
+  .chitu-aside-panel {
+    filter: none;
+  }
+}
+
+html[hc="1.5"],
+html[hc="2"],
+html[hc="2.5"],
+html[hc="3"] {
+  filter: url("#hc_extension_highcontrast");
+
+  .v-modal {
+    opacity: 0.22;
+  }
+}
+
+html[hc="1.5"] {
+
+  .chitu-header-panel,
+  .chitu-aside-panel {
+    filter: opacity(0.9);
+  }
+}
+
+html[hc="2"] {
+
+  .chitu-header-panel,
+  .chitu-aside-panel {
+    filter: opacity(0.8);
+  }
+}
+
+html[hc="2.5"] {
+
+  .chitu-header-panel,
+  .chitu-aside-panel {
+    filter: opacity(0.7);
+  }
+}
+
+html[hc="3"] {
+
+  .chitu-header-panel,
+  .chitu-aside-panel {
+    filter: opacity(0.6);
+  }
+}

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chitu.bigdata.sdp.mapper.SdpEngineUserMapper">
+    <resultMap id="BaseResultMap" type="com.chitu.bigdata.sdp.api.model.SdpEngineUser">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="engine_id" jdbcType="BIGINT" property="engineId" />
+        <result column="user_id" jdbcType="BIGINT" property="userId" />
+        <result column="enabled_flag" jdbcType="TINYINT" property="enabledFlag" />
+        <result column="trace_id" jdbcType="VARCHAR" property="traceId" />
+        <result column="created_by" jdbcType="VARCHAR" property="createdBy" />
+        <result column="updated_by" jdbcType="VARCHAR" property="updatedBy" />
+        <result column="creation_date" jdbcType="TIMESTAMP" property="creationDate" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+    <sql id="BaseTable">
+        sdp_engine_user
+    </sql>
+
+
+    <resultMap id="ResultMap" type="com.chitu.bigdata.sdp.api.domain.EngineUserInfo">
+        <id column="id" jdbcType="BIGINT" property="id" />
+        <result column="engine_id" jdbcType="BIGINT" property="engineId" />
+        <result column="user_name" jdbcType="VARCHAR" property="userName" />
+        <result column="employee_number" jdbcType="VARCHAR" property="employeeNumber" />
+        <result column="updation_date" jdbcType="TIMESTAMP" property="updationDate" />
+    </resultMap>
+
+    <select id="selectIsExist" resultMap="BaseResultMap">
+        SELECT
+        id,
+        engine_id,
+        user_id,
+        enabled_flag
+        from sdp_engine_user
+        <where>
+            enabled_flag = 1
+                <if test="engineId != null and engineId != ''">
+                    AND engine_id = #{engineId, jdbcType=BIGINT}
+                </if>
+                <if test="userId != null and userId!=''">
+                    AND user_id = #{userId, jdbcType=BIGINT}
+                </if>
+        </where>
+    </select>
+
+    <select id="getEngineUsers" resultMap="ResultMap">
+        SELECT
+        su.id,
+        seu.engine_id,
+        su.user_name,
+        seu.updation_date as updation_date,
+        su.employee_number
+        from sdp_engine_user seu
+        LEFT JOIN sdp_user su on seu.user_id=su.id and su.enabled_flag = 1
+        where
+        seu.enabled_flag = 1
+        <if test="engineId != null and engineId != ''">
+            AND seu.engine_id = #{engineId}
+        </if>
+        order by seu.updation_date desc
+    </select>
+
+    <update id="updateDisable" >
+        update  sdp_engine_user
+        set enabled_flag = 0
+        where engine_id = #{engineId,jdbcType=BIGINT}
+    </update>
+</mapper>

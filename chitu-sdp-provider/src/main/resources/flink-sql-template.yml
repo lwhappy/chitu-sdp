@@ -1,0 +1,43 @@
+## 部署flink配置参数：https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/deployment/config/
+# 重启策略：[fixed-delay|failure-rate|none]
+restart-strategy: fixed-delay
+# 重启次数
+restart-strategy.fixed-delay.attempts: 2147483647
+# 重启间隔(单位毫秒)
+restart-strategy.fixed-delay.delay: 1000
+# 状态后端：[hashmap/rocksdb]
+state.backend: rocksdb
+# 状态后端存储：[jobmanager/filesystem]
+state.checkpoint-storage: filesystem
+# 检查点间隔时间(单位毫秒)
+execution.checkpointing.interval: 120000
+# 检查点模式：[EXACTLY_ONCE/AT_LEAST_ONCE]
+execution.checkpointing.mode: EXACTLY_ONCE
+# 是否启用非对齐的检查点
+execution.checkpointing.unaligned: false
+# 同一时间允许进行几次检查点
+execution.checkpointing.max-concurrent-checkpoints: 1
+# 每个taskmanager的slots个数，并行度和slots个数会决定taskmanager的个数
+taskmanager.numberOfTaskSlots: 1
+# 是否开启火焰图
+rest.flamegraph.enabled: false
+# taskmanager管理内存比例
+#taskmanager.memory.managed.fraction: 0.4
+# 是否开启chain
+pipeline.operator-chaining: true
+
+## table sql参数：https://nightlies.apache.org/flink/flink-docs-release-1.14/docs/dev/table/config/
+# 状态有效期
+# 状态后端为rocksdb时，是否使用增量检查点
+state.backend.incremental: true
+table.exec.state.ttl: 90000000
+table.exec.mini-batch.enabled: true
+table.exec.mini-batch.allow-latency: 10s
+table.exec.mini-batch.size: 1000
+table.optimizer.distinct-agg.split.enabled: true
+table.exec.hive.fallback-mapred-writer: false
+table.exec.source.idle-timeout: 60000
+#table.exec.sink.upsert-materialize: NONE
+
+##sql变量配置：以 sql.param.xxx: value 样式进行配置，对应sql中${xxx}；
+#例如sql中 score = ${score} 在这里配置为 sql.param.score: 20
